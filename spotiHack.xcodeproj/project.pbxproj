@@ -7,11 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FB1BF4991C6C6F3D008DFDF6 /* ModernOverlay.png in Resources */ = {isa = PBXBuildFile; fileRef = FB1BF4971C6C6F3D008DFDF6 /* ModernOverlay.png */; };
+		FB1BF49A1C6C6F3D008DFDF6 /* ModernMask.tif in Resources */ = {isa = PBXBuildFile; fileRef = FB1BF4981C6C6F3D008DFDF6 /* ModernMask.tif */; };
 		FBD56CC41C65AA2600FF0DCA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD56CC31C65AA2600FF0DCA /* main.m */; };
 		FBD56CC71C65AAA700FF0DCA /* ZKSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD56CC61C65AAA700FF0DCA /* ZKSwizzle.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		FB1BF4971C6C6F3D008DFDF6 /* ModernOverlay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ModernOverlay.png; sourceTree = "<group>"; };
+		FB1BF4981C6C6F3D008DFDF6 /* ModernMask.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = ModernMask.tif; sourceTree = "<group>"; };
 		FBD56CB91C65A9F100FF0DCA /* spotiHack.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = spotiHack.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBD56CBC1C65A9F100FF0DCA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FBD56CC21C65AA2600FF0DCA /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
@@ -52,6 +56,8 @@
 			children = (
 				FBD56CC51C65AAA700FF0DCA /* ZKSwizzle.h */,
 				FBD56CC61C65AAA700FF0DCA /* ZKSwizzle.m */,
+				FB1BF4971C6C6F3D008DFDF6 /* ModernOverlay.png */,
+				FB1BF4981C6C6F3D008DFDF6 /* ModernMask.tif */,
 				FBD56CBC1C65A9F100FF0DCA /* Info.plist */,
 				FBD56CC21C65AA2600FF0DCA /* main.h */,
 				FBD56CC31C65AA2600FF0DCA /* main.m */,
@@ -116,6 +122,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB1BF49A1C6C6F3D008DFDF6 /* ModernMask.tif in Resources */,
+				FB1BF4991C6C6F3D008DFDF6 /* ModernOverlay.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -186,7 +194,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -223,7 +231,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 			};
@@ -274,6 +282,7 @@
 				FBD56CC11C65A9F100FF0DCA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

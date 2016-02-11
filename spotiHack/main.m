@@ -11,9 +11,13 @@
 struct TrackMetadata;
 
 main *plugin;
-NSUserDefaults *sharedPrefs;
-NSDictionary *sharedDict;
-bool enabled = true;
+NSArray *menuItems;
+NSImage *myImage;
+//NSUserDefaults *sharedPrefs;
+//NSDictionary *sharedDict;
+bool showArt = true;
+bool muteAds = true;
+int iconArt = 0;
 
 @implementation main
 
@@ -27,18 +31,242 @@ bool enabled = true;
     return plugin;
 }
 
-+ (void)load {
++ (void)load
+{
     plugin = [main sharedInstance];
-    NSLog(@"spotiHack loaded...");
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [plugin pollThread];
         dispatch_async(dispatch_get_main_queue(), ^{
             //
         });
     });
+    NSApplication *application = [NSApplication sharedApplication];
+    NSMenu *menu = application.windowsMenu;
+    
+    NSMenuItem *mainItem = [[NSMenuItem alloc] init];
+    [mainItem setTitle:@"spotifyAB"];
+    
+    NSMenu *submenu = [[NSMenu alloc] init];
+    [submenu addItemWithTitle:@"Mute Audio Ads" action:@selector(setMuting:) keyEquivalent:@""];
+    [[submenu addItemWithTitle:@"Disable icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenu addItemWithTitle:@"Stock icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenu addItemWithTitle:@"Tilted icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenu addItemWithTitle:@"Circular icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    
+    if (menuItems == nil)
+        menuItems = [submenu itemArray];
+    
+    [mainItem setSubmenu:submenu];
+    
+//    NSMenuItem *myitem = [[NSMenuItem alloc] initWithTitle:@"spotifyAB" action:@selector(wb_refreshmyTabs) keyEquivalent:@"X"];
+//    [myitem setKeyEquivalentModifierMask: NSCommandKeyMask];
+//    [myitem setTarget:plugin];
+    
+    [menu addItem:[NSMenuItem separatorItem]];
+    [menu addItem:mainItem];
+    NSLog(@"spotiHack loaded...");
 }
 
-- (void)pollThread {
+- (IBAction)setMuting:(id)sender
+{
+    
+}
+
+- (IBAction)setIconArt:(id)sender
+{
+    if ([menuItems containsObject:sender])
+    {
+        if ([menuItems indexOfObject:sender] == 2)
+            iconArt = 2;
+        if ([menuItems indexOfObject:sender] == 3)
+            iconArt = 1;
+        if ([menuItems indexOfObject:sender] == 4)
+            iconArt = 0;
+        
+        if ([menuItems indexOfObject:sender] == 1)
+        {
+            [NSApp setApplicationIconImage:nil];
+            showArt = !showArt;
+            [[menuItems objectAtIndex:1] setState:!showArt];
+        }
+        
+        if ([menuItems indexOfObject:sender] >= 2)
+        {
+            NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
+            [NSApp setApplicationIconImage:modifiedIcon];
+        }
+    }
+}
+
+- (NSString*) runCommand:(NSString*)commandToRun
+{
+    NSTask *task = [[NSTask alloc] init];
+    [task setLaunchPath:@"/bin/sh"];
+    
+    NSArray *arguments = [NSArray arrayWithObjects:
+                          @"-c" ,
+                          [NSString stringWithFormat:@"%@", commandToRun],
+                          nil];
+    //    NSLog(@"run command:%@", commandToRun);
+    [task setArguments:arguments];
+    
+    NSPipe *pipe = [NSPipe pipe];
+    [task setStandardOutput:pipe];
+    
+    NSFileHandle *file = [pipe fileHandleForReading];
+    
+    [task launch];
+    
+    NSData *data = [file readDataToEndOfFile];
+    
+    NSString *output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    return output;
+}
+
+- (NSImage*)imageRotatedByDegrees:(CGFloat)degrees :(NSImage*)img
+{
+    NSSize    size = [img size];
+    NSSize    newSize = NSMakeSize( size.width + 40,
+                                   size.height + 40 );
+    
+//    NSSize rotatedSize = NSMakeSize(img.size.height, img.size.width) ;
+    NSImage* rotatedImage = [[NSImage alloc] initWithSize:newSize] ;
+    
+    NSAffineTransform* transform = [NSAffineTransform transform] ;
+    
+    // In order to avoid clipping the image, translate
+    // the coordinate system to its center
+//    [transform translateXBy:+img.size.width/2
+//                        yBy:+img.size.height/2] ;
+    
+    [transform translateXBy:img.size.width / 2
+                        yBy:img.size.height / 2];
+    
+    // then rotate
+    [transform rotateByDegrees:degrees] ;
+    
+    // Then translate the origin system back to
+    // the bottom left
+    [transform translateXBy:-size.width/2
+                        yBy:-size.height/2] ;
+    
+//
+    
+    [rotatedImage lockFocus] ;
+    [transform concat] ;
+    [img drawAtPoint:NSMakePoint(15,10)
+             fromRect:NSZeroRect
+            operation:NSCompositeCopy
+             fraction:1.0] ;
+    [rotatedImage unlockFocus] ;
+    
+    return rotatedImage;
+}
+
+- (CGImageRef)createCGImageFromFile:(NSString*)path
+{
+    // Get the URL for the pathname passed to the function.
+    NSURL *url = [NSURL fileURLWithPath:path];
+    CGImageRef        myImage = NULL;
+    CGImageSourceRef  myImageSource;
+    CFDictionaryRef   myOptions = NULL;
+    CFStringRef       myKeys[2];
+    CFTypeRef         myValues[2];
+    
+    // Set up options if you want them. The options here are for
+    // caching the image in a decoded form and for using floating-point
+    // values if the image format supports them.
+    myKeys[0] = kCGImageSourceShouldCache;
+    myValues[0] = (CFTypeRef)kCFBooleanTrue;
+    myKeys[1] = kCGImageSourceShouldAllowFloat;
+    myValues[1] = (CFTypeRef)kCFBooleanTrue;
+    // Create the dictionary
+    myOptions = CFDictionaryCreate(NULL, (const void **) myKeys,
+                                   (const void **) myValues, 2,
+                                   &kCFTypeDictionaryKeyCallBacks,
+                                   & kCFTypeDictionaryValueCallBacks);
+    // Create an image source from the URL.
+    myImageSource = CGImageSourceCreateWithURL((CFURLRef)url, myOptions);
+    CFRelease(myOptions);
+    // Make sure the image source exists before continuing
+    if (myImageSource == NULL){
+        fprintf(stderr, "Image source is NULL.");
+        return  NULL;
+    }
+    // Create an image from the first item in the image source.
+    myImage = CGImageSourceCreateImageAtIndex(myImageSource,
+                                              0,
+                                              NULL);
+    
+    CFRelease(myImageSource);
+    // Make sure the image exists before continuing
+    if (myImage == NULL){
+        fprintf(stderr, "Image not created from image source.");
+        return NULL;
+    }
+    
+    return myImage;
+}
+
+- (NSImage*)createIconImage:(NSImage*)stockCover :(int)resultType
+{
+    // 0 = rounded
+    // 1 = tilded
+    // 2 = square
+//    NSString *myLittleCLIToolPath = NSProcessInfo.processInfo.arguments[0];
+    NSString *maskPath = @"/Library/Application Support/SIMBL/Plugins/spotiHack.bundle/Contents/Resources/ModernMask.tif";
+    NSString *overlayPath = @"/Library/Application Support/SIMBL/Plugins/spotiHack.bundle/Contents/Resources/ModernOverlay.png";
+    NSImage *resultIMG = [[NSImage alloc] init];
+    
+    if (resultType == 0)
+    {
+        [[stockCover TIFFRepresentation] writeToFile:@"/tmp/spotifyCover.tif" atomically:YES];
+        CGImageRef imgRef = [plugin createCGImageFromFile:@"/tmp/spotifyCover.tif"];
+//        CGImageRef maskRef = [plugin createCGImageFromFile:@"/Users/w0lf/Desktop/ModernMask.tif"];
+        CGImageRef maskRef = [plugin createCGImageFromFile:maskPath];
+        CGImageRef actualMask = CGImageMaskCreate(CGImageGetWidth(maskRef),
+                                                  CGImageGetHeight(maskRef),
+                                                  CGImageGetBitsPerComponent(maskRef),
+                                                  CGImageGetBitsPerPixel(maskRef),
+                                                  CGImageGetBytesPerRow(maskRef),
+                                                  CGImageGetDataProvider(maskRef), NULL, false);
+        CGImageRef masked = CGImageCreateWithMask(imgRef, actualMask);
+        NSImage *rounded = [[NSImage alloc] initWithCGImage:masked size:NSZeroSize];
+        NSImage *background = rounded;
+//        NSImage *overlay = [[NSImage alloc] initByReferencingFile:@"/Users/w0lf/Desktop/ModernOverlay.png"];
+        NSImage *overlay = [[NSImage alloc] initByReferencingFile:overlayPath];
+        NSImage *newImage = [[NSImage alloc] initWithSize:[background size]];
+        [newImage lockFocus];
+        CGRect newImageRect = CGRectZero;
+        newImageRect.size = [newImage size];
+        [background drawInRect:newImageRect];
+        [overlay drawInRect:newImageRect];
+        [newImage unlockFocus];
+        resultIMG = newImage;
+    }
+    else if (resultType == 1)
+    {
+        NSSize dims = [[NSApp dockTile] size];
+        dims.width *= 0.9;
+        dims.height *= 0.9;
+        NSImage *smallImage = [[NSImage alloc] initWithSize: dims];
+        [smallImage lockFocus];
+        [stockCover setSize: dims];
+        [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
+        [stockCover drawAtPoint:NSZeroPoint fromRect:CGRectMake(0, 0, dims.width, dims.height) operation:NSCompositeCopy fraction:1.0];
+        [smallImage unlockFocus];
+        smallImage = [plugin imageRotatedByDegrees:15.00 :smallImage];
+        resultIMG = smallImage;
+    }
+    else
+    {
+        resultIMG = stockCover;
+    }
+    return resultIMG;
+}
+
+- (void)pollThread
+{
     // playerState
     // 1 playing
     // 2 paused
@@ -50,12 +278,14 @@ bool enabled = true;
     bool imageFetched = false;
     bool isAD = false;
     bool isMuted = false;
+    bool isPaused = false;
     
     while (true) {
         NSNumber *playState = thisApp.playerState;
         if ([playState isEqualToNumber:[NSNumber numberWithInt:2]]) {
             [NSApp setApplicationIconImage:nil];
             [[NSApp dockTile] setBadgeLabel:nil];
+            isPaused = true;
             if (isMuted)
             {
                 isMuted = false;
@@ -90,50 +320,45 @@ bool enabled = true;
                     [[NSApp dockTile] setBadgeLabel:nil];
                 }
                 
-                if (![currentTrack isEqualToString:trackURL])
+                if (showArt)
                 {
-                    currentTrack = [NSString stringWithFormat:@"%@", trackURL];
-                    NSString *combinedURL = [NSString stringWithFormat:@"https://embed.spotify.com/oembed/?url=%@", trackURL];
-                    NSURL *targetURL = [NSURL URLWithString:combinedURL];
-                    NSURLRequest *request = [NSURLRequest requestWithURL:targetURL];
-                    NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
-                    NSString *dataString = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-                    NSString *fixedString = [dataString stringByReplacingOccurrencesOfString:@"\\" withString:@""];
-                    fixedString = [fixedString stringByReplacingOccurrencesOfString:@"\"" withString:@""];
-                    NSArray *urlComponents = [fixedString componentsSeparatedByString:@","];
-                    NSString *iconURL = @"";
-                    if ([urlComponents count] >= 7)
-                        iconURL = [urlComponents objectAtIndex:7];
-                    NSArray *iconComponents = [iconURL componentsSeparatedByString:@":"];
-                    NSString *iconURLFixed = [NSString stringWithFormat:@"https:%@", [iconComponents lastObject]];
-                    //        NSString *iconURLx120 = [iconURLFixed stringByReplacingOccurrencesOfString:@"cover" withString:@"120"];
-                    NSLog(@"%@", iconURLFixed);
-                    NSImage *myImage = [[NSImage alloc] initWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:iconURLFixed]]];
-                    //        NSImage *myImage = [[NSImage alloc] initByReferencingURL:[NSURL URLWithString:iconURLx60]];
-                    
-                    if ( myImage )
+                    if (![currentTrack isEqualToString:trackURL])
                     {
-                        //                    CGImageRef imgRef = [image CGImage];
-                        //                    CGImageRef maskRef = [[CIImage alloc] initWithContentsOfURL:[NSURL URLWithString:iconURLFixed]];
-                        //                    CGImageRef actualMask = CGImageMaskCreate(CGImageGetWidth(maskRef),
-                        //                                                              CGImageGetHeight(maskRef),
-                        //                                                              CGImageGetBitsPerComponent(maskRef),
-                        //                                                              CGImageGetBitsPerPixel(maskRef),
-                        //                                                              CGImageGetBytesPerRow(maskRef),
-                        //                                                              CGImageGetDataProvider(maskRef), NULL, false);
-                        //                    CGImageRef masked = CGImageCreateWithMask(imgRef, actualMask);
+                        currentTrack = [NSString stringWithFormat:@"%@", trackURL];
+                        NSString *combinedURL = [NSString stringWithFormat:@"https://embed.spotify.com/oembed/?url=%@", trackURL];
+                        NSURL *targetURL = [NSURL URLWithString:combinedURL];
+                        NSURLRequest *request = [NSURLRequest requestWithURL:targetURL];
+                        NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+                        NSString *dataString = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
+                        NSString *fixedString = [dataString stringByReplacingOccurrencesOfString:@"\\" withString:@""];
+                        fixedString = [fixedString stringByReplacingOccurrencesOfString:@"\"" withString:@""];
+                        NSArray *urlComponents = [fixedString componentsSeparatedByString:@","];
+                        NSString *iconURL = @"";
+                        if ([urlComponents count] >= 7)
+                            iconURL = [urlComponents objectAtIndex:7];
+                        NSArray *iconComponents = [iconURL componentsSeparatedByString:@":"];
+                        NSString *iconURLFixed = [NSString stringWithFormat:@"https:%@", [iconComponents lastObject]];
+                        myImage = [[NSImage alloc] initWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:iconURLFixed]]];
+                        NSLog(@"%@", iconURLFixed);
                         
-                        [NSApp setApplicationIconImage:myImage];
-                        trackImage = myImage;
-                        imageFetched = true;
-                        //            NSLog(@"Image is not null :%@", myImage);
-                        //            [[myImage TIFFRepresentation] writeToFile:@"/Users/w0lf/Desktop/test.tif" atomically:YES];
+                        if ( myImage )
+                        {
+                            NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
+                            [NSApp setApplicationIconImage:modifiedIcon];
+                            trackImage = modifiedIcon;
+                            imageFetched = true;
+                        } else {
+                            imageFetched = false;
+                        }
+                    } else {
+                        if (imageFetched)
+                            if (isPaused) {
+                                [NSApp setApplicationIconImage:trackImage];
+                            }
                     }
-                } else {
-                    if (imageFetched)
-                        [NSApp setApplicationIconImage:trackImage];
                 }
             }
+            isPaused = false;
             usleep(3000000);
         }
     }
