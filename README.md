@@ -13,7 +13,7 @@
 
 # Installation:
 
-1. Install SIMBL
+1. Install [SIMBL](https://github.com/w0lfschild/SIMBLPlugins/raw/master/SIMBLInstaller/SIMBLInstaller.zip)
 2. Download [spotifyAB bundle](https://github.com/w0lfschild/spotifyAB/raw/master/build/spotifyAB.zip)
 3. Unzip download
 4. Copy to ``/Library/Application Support/SIMBL/Plugins``
