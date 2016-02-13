@@ -1,19 +1,20 @@
-# spotifyAB - [Download](https://github.com/w0lfschild/spotifyAB/raw/master/spotifyAB.zip)
+# spotifyAB - [Download](https://github.com/w0lfschild/spotifyAB/raw/master/build/spotifyAB.zip)
 
 ![preview](spotifyAB.png) 
 
 # Information:
 
-- spotifyAB is a SIMBL plugin adds some features to the spotify desktop player
-    - The main feature is inspired by DockArt and changes the dock icon to the now playing track art
-    - Secondary feature is automatically muting audio ads
-    - Other features may be added in the future
+- spotifyAB is a SIMBL plugin adds some features to the Spotify desktop player
+    - Changes the dock icon to the now playing track art
+    - Automatically mute audio ads
+    - Add badge to app icon when muted
+    - Controls located in Window menu
 - Author: [w0lfschild](https://github.com/w0lfschild)
 
 # Installation:
 
 1. Install SIMBL
-2. Download spotifyAB bundle
+2. Download [spotifyAB bundle](https://github.com/w0lfschild/spotifyAB/raw/master/build/spotifyAB.zip)
 3. Unzip download
 4. Copy to ``/Library/Application Support/SIMBL/Plugins``
 5. Restart Spotify to have spotifyAB plugin loaded

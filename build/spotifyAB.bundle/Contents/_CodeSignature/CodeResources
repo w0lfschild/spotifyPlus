@@ -3,9 +3,41 @@
 <plist version="1.0">
 <dict>
 	<key>files</key>
-	<dict/>
+	<dict>
+		<key>Resources/ModernMask.tif</key>
+		<data>
+		u7Jwn4kuPBErnnmCiffe3dqsxT0=
+		</data>
+		<key>Resources/ModernOverlay.png</key>
+		<data>
+		trqdX72zFthMcQlywfTOkKK29pk=
+		</data>
+	</dict>
 	<key>files2</key>
-	<dict/>
+	<dict>
+		<key>Resources/ModernMask.tif</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			u7Jwn4kuPBErnnmCiffe3dqsxT0=
+			</data>
+			<key>hash2</key>
+			<data>
+			0AcMiRcpQ77U8dDox7fWUaY1oQ6Xlg/kN3Nf+VIJFZ4=
+			</data>
+		</dict>
+		<key>Resources/ModernOverlay.png</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			trqdX72zFthMcQlywfTOkKK29pk=
+			</data>
+			<key>hash2</key>
+			<data>
+			IzFijWQ9HQtTETerk3vQsBro46e9EMXlufBWtgS6cJg=
+			</data>
+		</dict>
+	</dict>
 	<key>rules</key>
 	<dict>
 		<key>^Resources/</key>

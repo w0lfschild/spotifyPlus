@@ -13,11 +13,12 @@ struct TrackMetadata;
 main *plugin;
 NSArray *menuItems;
 NSImage *myImage;
-//NSUserDefaults *sharedPrefs;
-//NSDictionary *sharedDict;
+NSUserDefaults *sharedPrefs;
 bool showArt = true;
 bool muteAds = true;
 int iconArt = 0;
+int sleepTime = 1000000;
+//int sleepTime = 3000000;
 
 @implementation main
 
@@ -34,20 +35,37 @@ int iconArt = 0;
 + (void)load
 {
     plugin = [main sharedInstance];
+    ClientApplication *application = [NSApplication sharedApplication];
+    
+    if (!sharedPrefs)
+        sharedPrefs = [NSUserDefaults standardUserDefaults];
+    
+    if ([sharedPrefs objectForKey:@"muteAds"] == nil)
+        [sharedPrefs setBool:true forKey:@"muteAds"];
+    if ([sharedPrefs objectForKey:@"iconArt"] == nil)
+        [sharedPrefs setInteger:0 forKey:@"iconArt"];
+//    if ([sharedPrefs objectForKey:@"trackVol"] != nil)
+//        [application setSoundVolume:[sharedPrefs objectForKey:@"trackVol"]];
+    
+    muteAds = [sharedPrefs objectForKey:@"muteAds"];
+    iconArt = (int)[sharedPrefs integerForKey:@"iconArt"];
+    if (iconArt > 2)
+        showArt = false;
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [plugin pollThread];
         dispatch_async(dispatch_get_main_queue(), ^{
             //
         });
     });
-    NSApplication *application = [NSApplication sharedApplication];
+    
     NSMenu *menu = application.windowsMenu;
     
     NSMenuItem *mainItem = [[NSMenuItem alloc] init];
     [mainItem setTitle:@"spotifyAB"];
     
     NSMenu *submenu = [[NSMenu alloc] init];
-    [submenu addItemWithTitle:@"Mute Audio Ads" action:@selector(setMuting:) keyEquivalent:@""];
+    [[submenu addItemWithTitle:@"Mute Audio Ads" action:@selector(setMuting:) keyEquivalent:@""] setTarget:plugin];
     [[submenu addItemWithTitle:@"Disable icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
     [[submenu addItemWithTitle:@"Stock icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
     [[submenu addItemWithTitle:@"Tilted icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
@@ -56,11 +74,11 @@ int iconArt = 0;
     if (menuItems == nil)
         menuItems = [submenu itemArray];
     
+    [[menuItems objectAtIndex:0] setState:muteAds];
+    if ((4 - iconArt) > 0)
+        if ((4 - iconArt) < [menuItems count])
+            [[menuItems objectAtIndex:(4 - iconArt)] setState:NSOnState];
     [mainItem setSubmenu:submenu];
-    
-//    NSMenuItem *myitem = [[NSMenuItem alloc] initWithTitle:@"spotifyAB" action:@selector(wb_refreshmyTabs) keyEquivalent:@"X"];
-//    [myitem setKeyEquivalentModifierMask: NSCommandKeyMask];
-//    [myitem setTarget:plugin];
     
     [menu addItem:[NSMenuItem separatorItem]];
     [menu addItem:mainItem];
@@ -69,58 +87,50 @@ int iconArt = 0;
 
 - (IBAction)setMuting:(id)sender
 {
-    
+    muteAds = !muteAds;
+    [[menuItems objectAtIndex:0] setState:muteAds];
+    [sharedPrefs setBool:muteAds forKey:@"muteAds"];
 }
 
 - (IBAction)setIconArt:(id)sender
 {
+    int objectIndex = (int)[menuItems indexOfObject:sender];
     if ([menuItems containsObject:sender])
     {
-        if ([menuItems indexOfObject:sender] == 2)
+        if (objectIndex == 2)
             iconArt = 2;
-        if ([menuItems indexOfObject:sender] == 3)
+        if (objectIndex == 3)
             iconArt = 1;
-        if ([menuItems indexOfObject:sender] == 4)
+        if (objectIndex == 4)
             iconArt = 0;
         
-        if ([menuItems indexOfObject:sender] == 1)
+        if (objectIndex == 1)
         {
             [NSApp setApplicationIconImage:nil];
             showArt = !showArt;
+            if (showArt)
+            {
+                NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
+                [NSApp setApplicationIconImage:modifiedIcon];
+            }
             [[menuItems objectAtIndex:1] setState:!showArt];
         }
         
-        if ([menuItems indexOfObject:sender] >= 2)
+        if (objectIndex > 1)
         {
+            showArt = true;
+            for (NSMenuItem *item in menuItems) {
+                if ([item isEqualTo:sender])
+                    [item setState:NSOnState];
+                else
+                    [item setState:NSOffState];
+            }
+            [[menuItems objectAtIndex:0] setState:muteAds];
             NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
             [NSApp setApplicationIconImage:modifiedIcon];
         }
     }
-}
-
-- (NSString*) runCommand:(NSString*)commandToRun
-{
-    NSTask *task = [[NSTask alloc] init];
-    [task setLaunchPath:@"/bin/sh"];
-    
-    NSArray *arguments = [NSArray arrayWithObjects:
-                          @"-c" ,
-                          [NSString stringWithFormat:@"%@", commandToRun],
-                          nil];
-    //    NSLog(@"run command:%@", commandToRun);
-    [task setArguments:arguments];
-    
-    NSPipe *pipe = [NSPipe pipe];
-    [task setStandardOutput:pipe];
-    
-    NSFileHandle *file = [pipe fileHandleForReading];
-    
-    [task launch];
-    
-    NSData *data = [file readDataToEndOfFile];
-    
-    NSString *output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    return output;
+    [sharedPrefs setInteger:iconArt forKey:@"iconArt"];
 }
 
 - (NSImage*)imageRotatedByDegrees:(CGFloat)degrees :(NSImage*)img
@@ -214,15 +224,14 @@ int iconArt = 0;
     // 1 = tilded
     // 2 = square
 //    NSString *myLittleCLIToolPath = NSProcessInfo.processInfo.arguments[0];
-    NSString *maskPath = @"/Library/Application Support/SIMBL/Plugins/spotiHack.bundle/Contents/Resources/ModernMask.tif";
-    NSString *overlayPath = @"/Library/Application Support/SIMBL/Plugins/spotiHack.bundle/Contents/Resources/ModernOverlay.png";
+    NSString *maskPath = @"/Library/Application Support/SIMBL/Plugins/spotifyAB.bundle/Contents/Resources/ModernMask.tif";
+    NSString *overlayPath = @"/Library/Application Support/SIMBL/Plugins/spotifyAB.bundle/Contents/Resources/ModernOverlay.png";
     NSImage *resultIMG = [[NSImage alloc] init];
     
     if (resultType == 0)
     {
         [[stockCover TIFFRepresentation] writeToFile:@"/tmp/spotifyCover.tif" atomically:YES];
         CGImageRef imgRef = [plugin createCGImageFromFile:@"/tmp/spotifyCover.tif"];
-//        CGImageRef maskRef = [plugin createCGImageFromFile:@"/Users/w0lf/Desktop/ModernMask.tif"];
         CGImageRef maskRef = [plugin createCGImageFromFile:maskPath];
         CGImageRef actualMask = CGImageMaskCreate(CGImageGetWidth(maskRef),
                                                   CGImageGetHeight(maskRef),
@@ -233,7 +242,6 @@ int iconArt = 0;
         CGImageRef masked = CGImageCreateWithMask(imgRef, actualMask);
         NSImage *rounded = [[NSImage alloc] initWithCGImage:masked size:NSZeroSize];
         NSImage *background = rounded;
-//        NSImage *overlay = [[NSImage alloc] initByReferencingFile:@"/Users/w0lf/Desktop/ModernOverlay.png"];
         NSImage *overlay = [[NSImage alloc] initByReferencingFile:overlayPath];
         NSImage *newImage = [[NSImage alloc] initWithSize:[background size]];
         [newImage lockFocus];
@@ -272,7 +280,7 @@ int iconArt = 0;
     // 2 paused
     usleep(10000000);
     ClientApplication *thisApp = [NSApplication sharedApplication];
-    NSString *currentTrack = [[NSString alloc] init];
+    NSString *currentTrack = @"";
     NSImage *trackImage = [[NSImage alloc] init];
     NSNumber *appVolume = [thisApp soundVolume];
     bool imageFetched = false;
@@ -304,14 +312,28 @@ int iconArt = 0;
             
             if (isAD)
             {
-                if (!isMuted)
+                NSLog(@"%d", muteAds);
+                if (muteAds)
                 {
-                    isMuted = true;
-                    appVolume = [thisApp soundVolume];
-                    [thisApp setSoundVolume:[NSNumber numberWithInt:0]];
-                    [[NSApp dockTile] setBadgeLabel:@"Muted"];
-                    [NSApp setApplicationIconImage:nil];
+                    if (!isMuted)
+                    {
+                        isMuted = true;
+                        appVolume = [thisApp soundVolume];
+                        [sharedPrefs setInteger:[appVolume integerValue] forKey:@"trackVol"];
+                        [thisApp setSoundVolume:[NSNumber numberWithInt:0]];
+                        [[NSApp dockTile] setBadgeLabel:@"Muted"];
+                    }
                 }
+                else
+                {
+                    if (isMuted)
+                    {
+                        isMuted = false;
+                        [thisApp setSoundVolume:appVolume];
+                        [[NSApp dockTile] setBadgeLabel:nil];
+                    }
+                }
+                [NSApp setApplicationIconImage:nil];
             } else {
                 if (isMuted)
                 {
@@ -359,7 +381,7 @@ int iconArt = 0;
                 }
             }
             isPaused = false;
-            usleep(3000000);
+            usleep(sleepTime);
         }
     }
 }

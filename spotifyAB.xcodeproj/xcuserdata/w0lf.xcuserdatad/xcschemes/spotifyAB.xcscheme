@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FBD56CB81C65A9F100FF0DCA"
-               BuildableName = "spotiHack.bundle"
-               BlueprintName = "spotiHack"
-               ReferencedContainer = "container:spotiHack.xcodeproj">
+               BuildableName = "spotifyAB.bundle"
+               BlueprintName = "spotifyAB"
+               ReferencedContainer = "container:spotifyAB.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,9 +46,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FBD56CB81C65A9F100FF0DCA"
-            BuildableName = "spotiHack.bundle"
-            BlueprintName = "spotiHack"
-            ReferencedContainer = "container:spotiHack.xcodeproj">
+            BuildableName = "spotifyAB.bundle"
+            BlueprintName = "spotifyAB"
+            ReferencedContainer = "container:spotifyAB.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -64,9 +64,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FBD56CB81C65A9F100FF0DCA"
-            BuildableName = "spotiHack.bundle"
-            BlueprintName = "spotiHack"
-            ReferencedContainer = "container:spotiHack.xcodeproj">
+            BuildableName = "spotifyAB.bundle"
+            BlueprintName = "spotifyAB"
+            ReferencedContainer = "container:spotifyAB.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>
