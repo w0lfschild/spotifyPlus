@@ -5,10 +5,15 @@
 # Information:
 
 - spotifyAB is a SIMBL plugin that adds some features to the Spotify desktop player
-    - Changes the dock icon to the now playing track art
+    - Change the dock icon to the now playing track art (three options)
+        - Square
+        - Tilted square
+        - Circular
     - Automatically mute audio ads
+    - Automatically mute audio ads (disabled by default)
+    - Block banner ads (disabled by default + requires password to toggle)
     - Add badge to app icon when muted
-    - Controls located in Window menu
+    - Controls located in Playback menu
 - Author: [w0lfschild](https://github.com/w0lfschild)
 
 # Installation:
