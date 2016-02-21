@@ -11,14 +11,14 @@
 struct TrackMetadata;
 
 main *plugin;
-NSArray *menuItems;
 NSImage *myImage;
 NSUserDefaults *sharedPrefs;
+bool banners = false;
 bool showArt = true;
 bool muteAds = true;
+bool muteVid = false;
 int iconArt = 0;
 int sleepTime = 1000000;
-//int sleepTime = 3000000;
 
 @implementation main
 
@@ -35,101 +35,232 @@ int sleepTime = 1000000;
 + (void)load
 {
     plugin = [main sharedInstance];
-    ClientApplication *application = [NSApplication sharedApplication];
     
     if (!sharedPrefs)
         sharedPrefs = [NSUserDefaults standardUserDefaults];
     
     if ([sharedPrefs objectForKey:@"muteAds"] == nil)
         [sharedPrefs setBool:true forKey:@"muteAds"];
+    
+    if ([sharedPrefs objectForKey:@"muteVid"] == nil)
+        [sharedPrefs setBool:false forKey:@"muteVid"];
+    
+    if ([sharedPrefs objectForKey:@"banners"] == nil)
+        [sharedPrefs setBool:false forKey:@"banners"];
+    
+    if ([sharedPrefs objectForKey:@"showArt"] == nil)
+        [sharedPrefs setBool:true forKey:@"showArt"];
+    
     if ([sharedPrefs objectForKey:@"iconArt"] == nil)
         [sharedPrefs setInteger:0 forKey:@"iconArt"];
-//    if ([sharedPrefs objectForKey:@"trackVol"] != nil)
-//        [application setSoundVolume:[sharedPrefs objectForKey:@"trackVol"]];
     
-    muteAds = [sharedPrefs objectForKey:@"muteAds"];
+    
+    muteAds = [[sharedPrefs objectForKey:@"muteAds"] boolValue];
+    muteVid = [[sharedPrefs objectForKey:@"muteVid"] boolValue];
+    banners = [[sharedPrefs objectForKey:@"banners"] boolValue];
+    showArt = [[sharedPrefs objectForKey:@"showArt"] boolValue];
     iconArt = (int)[sharedPrefs integerForKey:@"iconArt"];
-    if (iconArt > 2)
-        showArt = false;
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [plugin pollThread];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            //
-        });
-    });
+    [plugin setMenu];
+    [plugin pollThread];
     
-    NSMenu *menu = application.windowsMenu;
-    
-    NSMenuItem *mainItem = [[NSMenuItem alloc] init];
-    [mainItem setTitle:@"spotifyAB"];
-    
-    NSMenu *submenu = [[NSMenu alloc] init];
-    [[submenu addItemWithTitle:@"Mute Audio Ads" action:@selector(setMuting:) keyEquivalent:@""] setTarget:plugin];
-    [[submenu addItemWithTitle:@"Disable icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenu addItemWithTitle:@"Stock icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenu addItemWithTitle:@"Tilted icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenu addItemWithTitle:@"Circular icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    
-    if (menuItems == nil)
-        menuItems = [submenu itemArray];
-    
-    [[menuItems objectAtIndex:0] setState:muteAds];
-    if ((4 - iconArt) > 0)
-        if ((4 - iconArt) < [menuItems count])
-            [[menuItems objectAtIndex:(4 - iconArt)] setState:NSOnState];
-    [mainItem setSubmenu:submenu];
-    
-    [menu addItem:[NSMenuItem separatorItem]];
-    [menu addItem:mainItem];
     NSLog(@"spotiHack loaded...");
 }
 
-- (IBAction)setMuting:(id)sender
+- (NSString*) runCommand:(NSString*)commandToRun
+{
+    NSTask *task = [[NSTask alloc] init];
+    [task setLaunchPath:@"/bin/sh"];
+    
+    NSArray *arguments = [NSArray arrayWithObjects:
+                          @"-c" ,
+                          [NSString stringWithFormat:@"%@", commandToRun],
+                          nil];
+    //    NSLog(@"run command:%@", commandToRun);
+    [task setArguments:arguments];
+    
+    NSPipe *pipe = [NSPipe pipe];
+    [task setStandardOutput:pipe];
+    
+    NSFileHandle *file = [pipe fileHandleForReading];
+    
+    [task launch];
+    
+    NSData *data = [file readDataToEndOfFile];
+    
+    NSString *output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    return output;
+}
+
+- (BOOL) runProcessAsAdministrator:(NSString*)scriptPath
+                     withArguments:(NSArray *)arguments
+                            output:(NSString **)output
+                  errorDescription:(NSString **)errorDescription {
+    
+    NSString * allArgs = [arguments componentsJoinedByString:@" "];
+    NSString * fullScript = [NSString stringWithFormat:@"'%@' %@", scriptPath, allArgs];
+    
+    NSDictionary *errorInfo = [NSDictionary new];
+    NSString *script =  [NSString stringWithFormat:@"do shell script \"%@\" with administrator privileges", fullScript];
+    
+    NSAppleScript *appleScript = [[NSAppleScript new] initWithSource:script];
+    NSAppleEventDescriptor * eventResult = [appleScript executeAndReturnError:&errorInfo];
+    
+    // Check errorInfo
+    if (! eventResult)
+    {
+        // Describe common errors
+        *errorDescription = nil;
+        if ([errorInfo valueForKey:NSAppleScriptErrorNumber])
+        {
+            NSNumber * errorNumber = (NSNumber *)[errorInfo valueForKey:NSAppleScriptErrorNumber];
+            if ([errorNumber intValue] == -128)
+                *errorDescription = @"The administrator password is required to do this.";
+        }
+        
+        // Set error message from provided message
+        if (*errorDescription == nil)
+        {
+            if ([errorInfo valueForKey:NSAppleScriptErrorMessage])
+                *errorDescription =  (NSString *)[errorInfo valueForKey:NSAppleScriptErrorMessage];
+        }
+        
+        return NO;
+    }
+    else
+    {
+        // Set output to the AppleScript's output
+        *output = [eventResult stringValue];
+        
+        return YES;
+    }
+}
+
+- (void)setMenu
+{
+    NSMenu *appMenu = [NSApp mainMenu];
+    NSMenuItem *playBackItem = [appMenu itemAtIndex:4];
+    NSMenu *playBack = [playBackItem submenu];
+
+    // Ads submenu
+    NSMenuItem *adsMenu = [[NSMenuItem alloc] init];
+    [adsMenu setTitle:@"Advertisements"];
+    NSMenu *submenuAds = [[NSMenu alloc] init];
+    [[submenuAds addItemWithTitle:@"Block banner Ads" action:@selector(setBannerBlock:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuAds addItemWithTitle:@"Mute Audio Ads" action:@selector(setAdsMuting:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuAds addItemWithTitle:@"Mute Video Ads" action:@selector(setVidMuting:) keyEquivalent:@""] setTarget:plugin];
+    NSArray *adsMenuArray = [submenuAds itemArray];
+    [[adsMenuArray objectAtIndex:0] setState:banners];
+    [[adsMenuArray objectAtIndex:1] setState:muteAds];
+    [[adsMenuArray objectAtIndex:2] setState:muteVid];
+    [adsMenu setSubmenu:submenuAds];
+    
+    // Icon art submenu
+    NSMenuItem *artMenu = [[NSMenuItem alloc] init];
+    [artMenu setTitle:@"Icon Art"];
+    NSMenu *submenuArt = [[NSMenu alloc] init];
+    [[submenuArt addItemWithTitle:@"Stock icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuArt addItemWithTitle:@"Tilted icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuArt addItemWithTitle:@"Circular icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    if ((2 - iconArt) >= 0) [[[submenuArt itemArray] objectAtIndex:(2 - iconArt)] setState:NSOnState];
+    [artMenu setSubmenu:submenuArt];
+    
+    // spotifyAB submenu
+    NSMenu *submenuRoot = [[NSMenu alloc] init];
+    [[submenuRoot addItemWithTitle:@"Show icon art" action:@selector(setShowArt:) keyEquivalent:@""] setTarget:plugin];
+    [submenuRoot addItem:adsMenu];
+    [submenuRoot addItem:artMenu];
+    [[[submenuRoot itemArray] objectAtIndex:0] setState:showArt];
+    
+    // spotifyAB meun item
+    NSMenuItem *mainItem = [[NSMenuItem alloc] init];
+    [mainItem setTitle:@"spotifyAB"];
+    [mainItem setSubmenu:submenuRoot];
+    
+    // Add spotifyAB menu to playback menu
+    [playBack addItem:[NSMenuItem separatorItem]];
+    [playBack addItem:mainItem];
+
+}
+
+- (IBAction)setBannerBlock:(id)sender
+{
+    banners = !banners;
+    [sender setState:banners];
+    [sharedPrefs setBool:banners forKey:@"banners"];
+    if (banners)
+    {
+        NSString * output = nil;
+        NSString * processErrorDescription = nil;
+        NSArray *args = [[NSArray alloc] initWithObjects:@"\\\"0.0.0.0 pubads.g.doubleclick.net\n0.0.0.0 securepubads.g.doubleclick.net\\\"", @">>", @"/private/etc/hosts",  nil];
+        BOOL success = [plugin runProcessAsAdministrator:@"/bin/echo" withArguments:args output:&output errorDescription:&processErrorDescription];
+        if (!success) // Process failed to run
+        {
+            NSLog(@"%@", processErrorDescription);
+        }
+        else
+        {
+            NSLog(@"Hosts file edited");
+        }
+    } else {
+        NSString * output = nil;
+        NSString * processErrorDescription = nil;
+        NSArray *args = [[NSArray alloc] initWithObjects:@"-i", @"''", @"'/g.doubleclick.net/d'", @"/private/etc/hosts", nil];
+        BOOL success = [plugin runProcessAsAdministrator:@"/usr/bin/sed" withArguments:args output:&output errorDescription:&processErrorDescription];
+        if (!success) // Process failed to run
+        {
+            NSLog(@"%@", processErrorDescription);
+        }
+        else
+        {
+            NSLog(@"Hosts file edited");
+        }
+    }
+}
+
+- (IBAction)setAdsMuting:(id)sender
 {
     muteAds = !muteAds;
-    [[menuItems objectAtIndex:0] setState:muteAds];
+    [sender setState:muteAds];
     [sharedPrefs setBool:muteAds forKey:@"muteAds"];
+}
+
+- (IBAction)setVidMuting:(id)sender
+{
+    muteVid = !muteVid;
+    [sender setState:muteVid];
+    [sharedPrefs setBool:muteVid forKey:@"muteVid"];
+}
+
+- (IBAction)setShowArt:(id)sender
+{
+    showArt = !showArt;
+    [sender setState:showArt];
+    [sharedPrefs setBool:showArt forKey:@"showArt"];
+    
+    if (showArt)
+    {
+        NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
+        [NSApp setApplicationIconImage:modifiedIcon];
+    } else {
+        [NSApp setApplicationIconImage:nil];
+    }
 }
 
 - (IBAction)setIconArt:(id)sender
 {
-    int objectIndex = (int)[menuItems indexOfObject:sender];
-    if ([menuItems containsObject:sender])
-    {
-        if (objectIndex == 2)
-            iconArt = 2;
-        if (objectIndex == 3)
-            iconArt = 1;
-        if (objectIndex == 4)
-            iconArt = 0;
-        
-        if (objectIndex == 1)
-        {
-            [NSApp setApplicationIconImage:nil];
-            showArt = !showArt;
-            if (showArt)
-            {
-                NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
-                [NSApp setApplicationIconImage:modifiedIcon];
-            }
-            [[menuItems objectAtIndex:1] setState:!showArt];
-        }
-        
-        if (objectIndex > 1)
-        {
-            showArt = true;
-            for (NSMenuItem *item in menuItems) {
-                if ([item isEqualTo:sender])
-                    [item setState:NSOnState];
-                else
-                    [item setState:NSOffState];
-            }
-            [[menuItems objectAtIndex:0] setState:muteAds];
-            NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
-            [NSApp setApplicationIconImage:modifiedIcon];
-        }
+    NSMenu *menu = [sender menu];
+    NSArray *menuArray = [menu itemArray];
+    int objectIndex = (int)[menuArray indexOfObject:sender];
+    iconArt = 2 - objectIndex;
+    for (NSMenuItem *item in menuArray) {
+        if ([item isEqualTo:sender])
+            [item setState:NSOnState];
+        else
+            [item setState:NSOffState];
     }
+    NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
+    [NSApp setApplicationIconImage:modifiedIcon];
     [sharedPrefs setInteger:iconArt forKey:@"iconArt"];
 }
 
@@ -275,36 +406,62 @@ int sleepTime = 1000000;
 
 - (void)pollThread
 {
-    // playerState
-    // 1 playing
-    // 2 paused
-    usleep(10000000);
-    ClientApplication *thisApp = [NSApplication sharedApplication];
-    NSString *currentTrack = @"";
-    NSImage *trackImage = [[NSImage alloc] init];
-    NSNumber *appVolume = [thisApp soundVolume];
-    bool imageFetched = false;
-    bool isAD = false;
-    bool isMuted = false;
-    bool isPaused = false;
+    //osascript -e "output muted of (get volume settings)"
     
-    while (true) {
-        NSNumber *playState = thisApp.playerState;
-        if ([playState isEqualToNumber:[NSNumber numberWithInt:2]]) {
-            [NSApp setApplicationIconImage:nil];
-            [[NSApp dockTile] setBadgeLabel:nil];
-            isPaused = true;
-            if (isMuted)
-            {
-                isMuted = false;
-                [thisApp setSoundVolume:appVolume];
-            }
-        } else {
-            SPAppleScriptTrack *track = [thisApp currentTrack];
-            NSString *trackURL = track.spotifyURL;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // playerState
+        // 1 playing
+        // 2 paused
+        usleep(10000000);
+        ClientApplication *thisApp = [NSApplication sharedApplication];
+        NSString *currentTrack = @"";
+        NSImage *trackImage = [[NSImage alloc] init];
+        NSNumber *appVolume = [thisApp soundVolume];
+        bool imageFetched = false;
+        bool isAD = false;
+        bool isMuted = false;
+        bool isSysmuted = false;
+        bool isPaused = false;
+    
+        NSMenuDelegate *md = [[thisApp menu] delegate];
+        NSMenu *appMenu = [thisApp mainMenu];
+        NSMenuItem *playBack = [appMenu itemAtIndex:4];
+        NSMenuItem *nextTrack = [[playBack submenu] itemAtIndex:2];
+        NSMenu *pbM = [playBack submenu];
+        
+        while (true) {
             
+            [md menuNeedsUpdate:pbM];
+            [[NSApp mainMenu] update];
+            if (![nextTrack isEnabled])
+            {
+                NSLog(@"%d", [nextTrack isEnabled]);
+                
+                // Video AD
+                if (muteVid)
+                {
+                    if (!isSysmuted)
+                    {
+                        isSysmuted = true;
+                        system("osascript -e \"set volume with output muted\"");
+                    }
+                }
+                else
+                {
+                    if (isSysmuted)
+                    {
+                        isSysmuted = false;
+                        system("osascript -e \"set volume without output muted\"");
+                    }
+                }
+            }
+            
+            SPAppleScriptTrack *track = [thisApp currentTrack];
+            NSNumber *playState = [thisApp playerState];
+            NSString *trackURL = [track spotifyURL];
             NSRange range = [trackURL rangeOfString:@"spotify:ad"];
-            if(range.location != NSNotFound) {
+            if(range.location != NSNotFound)
+            {
                 isAD = true;
             } else {
                 isAD = false;
@@ -312,7 +469,7 @@ int sleepTime = 1000000;
             
             if (isAD)
             {
-                NSLog(@"%d", muteAds);
+                // Audio AD
                 if (muteAds)
                 {
                     if (!isMuted)
@@ -335,6 +492,12 @@ int sleepTime = 1000000;
                 }
                 [NSApp setApplicationIconImage:nil];
             } else {
+                if (isSysmuted)
+                {
+                    isSysmuted = false;
+                    system("osascript -e \"set volume without output muted\"");
+                }
+                
                 if (isMuted)
                 {
                     isMuted = false;
@@ -342,48 +505,58 @@ int sleepTime = 1000000;
                     [[NSApp dockTile] setBadgeLabel:nil];
                 }
                 
-                if (showArt)
+                if ([playState isEqualToNumber:[NSNumber numberWithInt:2]])
                 {
-                    if (![currentTrack isEqualToString:trackURL])
+                    [NSApp setApplicationIconImage:nil];
+                    [[NSApp dockTile] setBadgeLabel:nil];
+                    isPaused = true;
+                }
+                else
+                {
+                    if (showArt)
                     {
-                        currentTrack = [NSString stringWithFormat:@"%@", trackURL];
-                        NSString *combinedURL = [NSString stringWithFormat:@"https://embed.spotify.com/oembed/?url=%@", trackURL];
-                        NSURL *targetURL = [NSURL URLWithString:combinedURL];
-                        NSURLRequest *request = [NSURLRequest requestWithURL:targetURL];
-                        NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
-                        NSString *dataString = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-                        NSString *fixedString = [dataString stringByReplacingOccurrencesOfString:@"\\" withString:@""];
-                        fixedString = [fixedString stringByReplacingOccurrencesOfString:@"\"" withString:@""];
-                        NSArray *urlComponents = [fixedString componentsSeparatedByString:@","];
-                        NSString *iconURL = @"";
-                        if ([urlComponents count] >= 7)
-                            iconURL = [urlComponents objectAtIndex:7];
-                        NSArray *iconComponents = [iconURL componentsSeparatedByString:@":"];
-                        NSString *iconURLFixed = [NSString stringWithFormat:@"https:%@", [iconComponents lastObject]];
-                        myImage = [[NSImage alloc] initWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:iconURLFixed]]];
-                        NSLog(@"%@", iconURLFixed);
-                        
-                        if ( myImage )
+                        NSString *trackURL = track.spotifyURL;
+                        if (![currentTrack isEqualToString:trackURL])
                         {
-                            NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
-                            [NSApp setApplicationIconImage:modifiedIcon];
-                            trackImage = modifiedIcon;
-                            imageFetched = true;
-                        } else {
-                            imageFetched = false;
-                        }
-                    } else {
-                        if (imageFetched)
-                            if (isPaused) {
-                                [NSApp setApplicationIconImage:trackImage];
+                            currentTrack = [NSString stringWithFormat:@"%@", trackURL];
+                            NSString *combinedURL = [NSString stringWithFormat:@"https://embed.spotify.com/oembed/?url=%@", trackURL];
+                            NSURL *targetURL = [NSURL URLWithString:combinedURL];
+                            NSURLRequest *request = [NSURLRequest requestWithURL:targetURL];
+                            NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+                            NSString *dataString = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
+                            NSString *fixedString = [dataString stringByReplacingOccurrencesOfString:@"\\" withString:@""];
+                            fixedString = [fixedString stringByReplacingOccurrencesOfString:@"\"" withString:@""];
+                            NSArray *urlComponents = [fixedString componentsSeparatedByString:@","];
+                            NSString *iconURL = @"";
+                            if ([urlComponents count] >= 7)
+                                iconURL = [urlComponents objectAtIndex:7];
+                            NSArray *iconComponents = [iconURL componentsSeparatedByString:@":"];
+                            NSString *iconURLFixed = [NSString stringWithFormat:@"https:%@", [iconComponents lastObject]];
+                            myImage = [[NSImage alloc] initWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:iconURLFixed]]];
+                            NSLog(@"%@", iconURLFixed);
+                            
+                            if ( myImage )
+                            {
+                                NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
+                                [NSApp setApplicationIconImage:modifiedIcon];
+                                trackImage = modifiedIcon;
+                                imageFetched = true;
+                            } else {
+                                imageFetched = false;
                             }
+                        } else {
+                            if (imageFetched)
+                                if (isPaused) {
+                                    [NSApp setApplicationIconImage:trackImage];
+                                }
+                        }
                     }
+                    isPaused = false;
                 }
             }
-            isPaused = false;
             usleep(sleepTime);
         }
-    }
+    });
 }
 
 @end

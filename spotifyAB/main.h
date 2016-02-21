@@ -12,6 +12,25 @@
 
 @end
 
+@interface NSMenuDelegate <NSObject>
+- (void)menu:(NSMenu *)arg1 willHighlightItem:(NSMenuItem *)arg2;
+- (void)menuDidClose:(NSMenu *)arg1;
+- (void)menuWillOpen:(NSMenu *)arg1;
+- (BOOL)menuHasKeyEquivalent:(NSMenu *)arg1 forEvent:(NSEvent *)arg2 target:(id *)arg3 action:(SEL *)arg4;
+- (BOOL)menu:(NSMenu *)arg1 updateItem:(NSMenuItem *)arg2 atIndex:(long long)arg3 shouldCancel:(BOOL)arg4;
+- (long long)numberOfItemsInMenu:(NSMenu *)arg1;
+- (void)menuNeedsUpdate:(NSMenu *)arg1;
+@end
+
+@interface NSWindow (DisableUserInteraction)
++ (void)load;
+@property BOOL isUserInteractionEnabled;
+- (void)sendEvent_swizzle:(id)arg1;
+- (void)updateMenu:(id)arg1 setEnabled:(BOOL)arg2;
+- (void)setWindowButtonsEnabled:(BOOL)arg1;
+- (BOOL)isUserInteractionEvent:(id)arg1;
+@end
+
 @interface ClientApplication : NSApplication
 {
     
