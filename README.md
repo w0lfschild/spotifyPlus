@@ -10,7 +10,7 @@
         - Tilted square
         - Circular
     - Automatically mute audio ads
-    - Automatically mute audio ads (disabled by default)
+    - Automatically mute video ads (disabled by default)
     - Block banner ads (disabled by default + requires password to toggle)
     - Add badge to app icon when muted
     - Controls located in Playback menu
