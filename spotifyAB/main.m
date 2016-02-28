@@ -415,7 +415,7 @@ int sleepTime = 1000000;
         
         while (true) {
             playState = [thisApp playerState];
-            NSLog(@"%@", playState);
+//            NSLog(@"%@", playState);
             
             if ([playState isEqualToNumber:[NSNumber numberWithInt:2]]) {
                 
