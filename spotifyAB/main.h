@@ -1,6 +1,6 @@
 //
 //  main.h
-//  spotiHack
+//  spotifyAB
 //
 //  Created by Wolfgang Baird on 2/5/16.
 //  Copyright © 2016 Wolfgang Baird. All rights reserved.
@@ -33,9 +33,7 @@
 
 @interface ClientApplication : NSApplication
 {
-    
 }
-
 - (void)setShuffle:(BOOL)arg1;
 - (BOOL)shuffle;
 - (BOOL)shuffleEnabled;
@@ -48,7 +46,6 @@
 - (void)setSoundVolume:(id)arg1;
 - (id)soundVolume;
 - (id)currentTrack;
-
 @end
 
 @interface SPAppleScriptItem : NSObject
@@ -56,20 +53,17 @@
     id parentItem;
     NSString *key;
 }
-
 - (void)dealloc;
 - (id)objectSpecifier;
 - (id)description;
 - (id)title;
 - (id)applescriptID;
 - (id)initWithKey:(id)arg1 inParent:(id)arg2;
-
 @end
 
 @interface SPAppleScriptTrack : SPAppleScriptItem
 {
 }
-
 - (void)dealloc;
 - (id)cover;
 - (id)spotifyURL;
@@ -83,7 +77,6 @@
 - (id)albumArtist;
 - (id)album;
 - (id)artist;
-
 @end
 
 @interface ClientMenuHandler : NSObject <NSMenuDelegate>
@@ -92,7 +85,6 @@
     NSMenuItem *devMenuItem_;
     NSWindow *applicationMainWindow_;
 }
-
 - (void)importPlaylists:(id)arg1;
 - (void)handleDevCommand:(int)arg1;
 - (void)toggleGrid:(id)arg1;
@@ -171,5 +163,4 @@
 - (void)updateMenu;
 - (void)setLoggedIn:(BOOL)arg1;
 - (void)dealloc;
-
 @end

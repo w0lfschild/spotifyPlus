@@ -1,6 +1,6 @@
 //
 //  main.m
-//  spotiHack
+//  spotifyAB
 //
 //  Created by Wolfgang Baird on 2/5/16.
 //  Copyright © 2016 Wolfgang Baird. All rights reserved.
@@ -67,31 +67,6 @@ int sleepTime = 1000000;
     NSLog(@"spotiHack loaded...");
 }
 
-- (NSString*) runCommand:(NSString*)commandToRun
-{
-    NSTask *task = [[NSTask alloc] init];
-    [task setLaunchPath:@"/bin/sh"];
-    
-    NSArray *arguments = [NSArray arrayWithObjects:
-                          @"-c" ,
-                          [NSString stringWithFormat:@"%@", commandToRun],
-                          nil];
-    //    NSLog(@"run command:%@", commandToRun);
-    [task setArguments:arguments];
-    
-    NSPipe *pipe = [NSPipe pipe];
-    [task setStandardOutput:pipe];
-    
-    NSFileHandle *file = [pipe fileHandleForReading];
-    
-    [task launch];
-    
-    NSData *data = [file readDataToEndOfFile];
-    
-    NSString *output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    return output;
-}
-
 - (BOOL) runProcessAsAdministrator:(NSString*)scriptPath
                      withArguments:(NSArray *)arguments
                             output:(NSString **)output
@@ -144,15 +119,15 @@ int sleepTime = 1000000;
 
     // Ads submenu
     NSMenuItem *adsMenu = [[NSMenuItem alloc] init];
-    [adsMenu setTitle:@"Advertisements"];
+    [adsMenu setTitle:@"Ad muting"];
     NSMenu *submenuAds = [[NSMenu alloc] init];
-    [[submenuAds addItemWithTitle:@"Block banner Ads" action:@selector(setBannerBlock:) keyEquivalent:@""] setTarget:plugin];
+    [submenuAds setAutoenablesItems:NO];
     [[submenuAds addItemWithTitle:@"Mute Audio Ads" action:@selector(setAdsMuting:) keyEquivalent:@""] setTarget:plugin];
     [[submenuAds addItemWithTitle:@"Mute Video Ads" action:@selector(setVidMuting:) keyEquivalent:@""] setTarget:plugin];
     NSArray *adsMenuArray = [submenuAds itemArray];
-    [[adsMenuArray objectAtIndex:0] setState:banners];
-    [[adsMenuArray objectAtIndex:1] setState:muteAds];
-    [[adsMenuArray objectAtIndex:2] setState:muteVid];
+    [[adsMenuArray objectAtIndex:0] setState:muteAds];
+    [[adsMenuArray objectAtIndex:1] setState:muteVid];
+    [[adsMenuArray objectAtIndex:1] setEnabled:false];
     [adsMenu setSubmenu:submenuAds];
     
     // Icon art submenu
@@ -168,9 +143,11 @@ int sleepTime = 1000000;
     // spotifyAB submenu
     NSMenu *submenuRoot = [[NSMenu alloc] init];
     [[submenuRoot addItemWithTitle:@"Show icon art" action:@selector(setShowArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuRoot addItemWithTitle:@"Block All Ads" action:@selector(editHostFile:) keyEquivalent:@""] setTarget:plugin];
     [submenuRoot addItem:adsMenu];
     [submenuRoot addItem:artMenu];
     [[[submenuRoot itemArray] objectAtIndex:0] setState:showArt];
+    [[[submenuRoot itemArray] objectAtIndex:1] setState:banners];
     
     // spotifyAB meun item
     NSMenuItem *mainItem = [[NSMenuItem alloc] init];
@@ -180,42 +157,56 @@ int sleepTime = 1000000;
     // Add spotifyAB menu to playback menu
     [playBack addItem:[NSMenuItem separatorItem]];
     [playBack addItem:mainItem];
+    
+    NSMenuItem *spotifyItem = [appMenu itemAtIndex:0];
+    NSMenu *spotify = [spotifyItem submenu];
+//    [spotify addItem:[NSMenuItem separatorItem]];
+    [[spotify addItemWithTitle:@"Restart" action:@selector(restartMe) keyEquivalent:@""] setTarget:plugin];
+    
+//    NSMenu *dock = [[NSApp delegate] applicationDockMenu:spotify];
+//    NSLog(@"%@", dock);
+}
+
+- (IBAction)editHostFile:(id)sender
+{
+    NSString * output = nil;
+    NSString * processErrorDescription = nil;
+    BOOL success = false;
+    if (!banners)
+    {
+        NSArray *args = [[NSArray alloc] initWithObjects:@"\\\"0.0.0.0 pubads.g.doubleclick.net\n0.0.0.0 securepubads.g.doubleclick.net\\\"", @">>", @"/private/etc/hosts",  nil];
+        success = [plugin runProcessAsAdministrator:@"/bin/echo" withArguments:args output:&output errorDescription:&processErrorDescription];
+    } else {
+        NSArray *args = [[NSArray alloc] initWithObjects:@"-i", @"''", @"'/g.doubleclick.net/d'", @"/private/etc/hosts", nil];
+        success = [plugin runProcessAsAdministrator:@"/usr/bin/sed" withArguments:args output:&output errorDescription:&processErrorDescription];
+    }
+    if (!success) // Process failed to run
+    {
+        NSLog(@"%@", processErrorDescription);
+    }
+    else
+    {
+        NSLog(@"Hosts file edited");
+        
+        banners = !banners;
+        [sender setState:banners];
+        [sharedPrefs setBool:banners forKey:@"banners"];
+        [plugin restartMe];
+    }
 
 }
 
-- (IBAction)setBannerBlock:(id)sender
+- (void)restartMe
 {
-    banners = !banners;
-    [sender setState:banners];
-    [sharedPrefs setBool:banners forKey:@"banners"];
-    if (banners)
-    {
-        NSString * output = nil;
-        NSString * processErrorDescription = nil;
-        NSArray *args = [[NSArray alloc] initWithObjects:@"\\\"0.0.0.0 pubads.g.doubleclick.net\n0.0.0.0 securepubads.g.doubleclick.net\\\"", @">>", @"/private/etc/hosts",  nil];
-        BOOL success = [plugin runProcessAsAdministrator:@"/bin/echo" withArguments:args output:&output errorDescription:&processErrorDescription];
-        if (!success) // Process failed to run
-        {
-            NSLog(@"%@", processErrorDescription);
-        }
-        else
-        {
-            NSLog(@"Hosts file edited");
-        }
-    } else {
-        NSString * output = nil;
-        NSString * processErrorDescription = nil;
-        NSArray *args = [[NSArray alloc] initWithObjects:@"-i", @"''", @"'/g.doubleclick.net/d'", @"/private/etc/hosts", nil];
-        BOOL success = [plugin runProcessAsAdministrator:@"/usr/bin/sed" withArguments:args output:&output errorDescription:&processErrorDescription];
-        if (!success) // Process failed to run
-        {
-            NSLog(@"%@", processErrorDescription);
-        }
-        else
-        {
-            NSLog(@"Hosts file edited");
-        }
-    }
+    float seconds = 3.0;
+    NSTask *task = [[NSTask alloc] init];
+    NSMutableArray *args = [NSMutableArray array];
+    [args addObject:@"-c"];
+    [args addObject:[NSString stringWithFormat:@"sleep %f; open \"%@\"", seconds, [[NSBundle mainBundle] bundlePath]]];
+    [task setLaunchPath:@"/bin/sh"];
+    [task setArguments:args];
+    [task launch];
+    [NSApp terminate:nil];
 }
 
 - (IBAction)setAdsMuting:(id)sender
@@ -407,112 +398,112 @@ int sleepTime = 1000000;
 - (void)pollThread
 {
     //osascript -e "output muted of (get volume settings)"
-    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // playerState
-        // 1 playing
-        // 2 paused
-        usleep(10000000);
+        
         ClientApplication *thisApp = [NSApplication sharedApplication];
+        SPAppleScriptTrack *track = [thisApp currentTrack];
+        NSNumber *playState = [thisApp playerState];
         NSString *currentTrack = @"";
-        NSImage *trackImage = [[NSImage alloc] init];
+        NSString *trackURL = @"";
+        NSImage  *trackImage = [[NSImage alloc] init];
         NSNumber *appVolume = [thisApp soundVolume];
         bool imageFetched = false;
         bool isAD = false;
         bool isMuted = false;
         bool isSysmuted = false;
         bool isPaused = false;
-    
-        NSMenuDelegate *md = [[thisApp menu] delegate];
-        NSMenu *appMenu = [thisApp mainMenu];
-        NSMenuItem *playBack = [appMenu itemAtIndex:4];
-        NSMenuItem *nextTrack = [[playBack submenu] itemAtIndex:2];
-        NSMenu *pbM = [playBack submenu];
         
         while (true) {
+            playState = [thisApp playerState];
+            NSLog(@"%@", playState);
             
-            [md menuNeedsUpdate:pbM];
-            [[NSApp mainMenu] update];
-            if (![nextTrack isEnabled])
-            {
-                NSLog(@"%d", [nextTrack isEnabled]);
+            if ([playState isEqualToNumber:[NSNumber numberWithInt:2]]) {
                 
-                // Video AD
-                if (muteVid)
+                // Audio Player paused
+                
+                [NSApp setApplicationIconImage:nil];
+                isPaused = true;
+                if (isMuted)
                 {
-                    if (!isSysmuted)
-                    {
-                        isSysmuted = true;
-                        system("osascript -e \"set volume with output muted\"");
-                    }
+                    isMuted = false;
+                    [thisApp setSoundVolume:appVolume];
                 }
-                else
+                
+                [[NSApp dockTile] setBadgeLabel:@"Paused"];
+                
+                // Video AD (Not sure how to detect right now)
+//                if (muteVid)
+//                {
+//                    if (!isSysmuted)
+//                    {
+//                        isSysmuted = true;
+//                        system("osascript -e \"set volume with output muted\"");
+//                    }
+//                }
+//                else
+//                {
+//                    if (isSysmuted)
+//                    {
+//                        isSysmuted = false;
+//                        system("osascript -e \"set volume without output muted\"");
+//                    }
+//                }
+                
+            } else if ([playState isEqualToNumber:[NSNumber numberWithInt:1]]) {
+                
+                // Audio Player active
+                
+                track = [thisApp currentTrack];
+                trackURL = [track spotifyURL];
+                NSRange range = [trackURL rangeOfString:@"spotify:ad"];
+                if(range.location != NSNotFound)
                 {
+                    isAD = true;
+                } else {
+                    isAD = false;
+                }
+                
+                if (isAD)
+                {
+                    
+                    // Playing Audio AD
+                    
+                    if (muteAds)
+                    {
+                        if (!isMuted)
+                        {
+                            isMuted = true;
+                            appVolume = [thisApp soundVolume];
+                            [sharedPrefs setInteger:[appVolume integerValue] forKey:@"trackVol"];
+                            [thisApp setSoundVolume:[NSNumber numberWithInt:0]];
+                        }
+                    }
+                    else
+                    {
+                        if (isMuted)
+                        {
+                            isMuted = false;
+                            [thisApp setSoundVolume:appVolume];
+                        }
+                    }
+                    [NSApp setApplicationIconImage:nil];
+                    
+                } else {
+                    
+                    // Playing music
+                    
                     if (isSysmuted)
                     {
                         isSysmuted = false;
                         system("osascript -e \"set volume without output muted\"");
                     }
-                }
-            }
-            
-            SPAppleScriptTrack *track = [thisApp currentTrack];
-            NSNumber *playState = [thisApp playerState];
-            NSString *trackURL = [track spotifyURL];
-            NSRange range = [trackURL rangeOfString:@"spotify:ad"];
-            if(range.location != NSNotFound)
-            {
-                isAD = true;
-            } else {
-                isAD = false;
-            }
-            
-            if (isAD)
-            {
-                // Audio AD
-                if (muteAds)
-                {
-                    if (!isMuted)
-                    {
-                        isMuted = true;
-                        appVolume = [thisApp soundVolume];
-                        [sharedPrefs setInteger:[appVolume integerValue] forKey:@"trackVol"];
-                        [thisApp setSoundVolume:[NSNumber numberWithInt:0]];
-                        [[NSApp dockTile] setBadgeLabel:@"Muted"];
-                    }
-                }
-                else
-                {
+                    
                     if (isMuted)
                     {
                         isMuted = false;
                         [thisApp setSoundVolume:appVolume];
-                        [[NSApp dockTile] setBadgeLabel:nil];
                     }
-                }
-                [NSApp setApplicationIconImage:nil];
-            } else {
-                if (isSysmuted)
-                {
-                    isSysmuted = false;
-                    system("osascript -e \"set volume without output muted\"");
-                }
-                
-                if (isMuted)
-                {
-                    isMuted = false;
-                    [thisApp setSoundVolume:appVolume];
-                    [[NSApp dockTile] setBadgeLabel:nil];
-                }
-                
-                if ([playState isEqualToNumber:[NSNumber numberWithInt:2]])
-                {
-                    [NSApp setApplicationIconImage:nil];
-                    [[NSApp dockTile] setBadgeLabel:nil];
-                    isPaused = true;
-                }
-                else
-                {
+                    
                     if (showArt)
                     {
                         NSString *trackURL = track.spotifyURL;
@@ -550,8 +541,18 @@ int sleepTime = 1000000;
                                     [NSApp setApplicationIconImage:trackImage];
                                 }
                         }
+                    } else {
+                        [NSApp setApplicationIconImage:nil];
                     }
+                    
                     isPaused = false;
+                }
+                
+                if ((NSNumber *)[thisApp soundVolume] < [NSNumber numberWithFloat:1.0])
+                {
+                    [[NSApp dockTile] setBadgeLabel:@"Muted"];
+                } else {
+                    [[NSApp dockTile] setBadgeLabel:nil];
                 }
             }
             usleep(sleepTime);
@@ -560,4 +561,3 @@ int sleepTime = 1000000;
 }
 
 @end
-
