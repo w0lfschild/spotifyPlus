@@ -7,6 +7,7 @@
 //
 
 @import AppKit;
+#import "ZKSwizzle.h"
 
 @interface main : NSObject
 

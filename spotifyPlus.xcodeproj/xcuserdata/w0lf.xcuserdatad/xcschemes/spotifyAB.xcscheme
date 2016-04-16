@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FBD56CB81C65A9F100FF0DCA"
-               BuildableName = "spotifyAB.bundle"
-               BlueprintName = "spotifyAB"
-               ReferencedContainer = "container:spotifyAB.xcodeproj">
+               BuildableName = "spotifyPlus.bundle"
+               BlueprintName = "spotifyPlus"
+               ReferencedContainer = "container:spotifyPlus.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,9 +46,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FBD56CB81C65A9F100FF0DCA"
-            BuildableName = "spotifyAB.bundle"
-            BlueprintName = "spotifyAB"
-            ReferencedContainer = "container:spotifyAB.xcodeproj">
+            BuildableName = "spotifyPlus.bundle"
+            BlueprintName = "spotifyPlus"
+            ReferencedContainer = "container:spotifyPlus.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -64,9 +64,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FBD56CB81C65A9F100FF0DCA"
-            BuildableName = "spotifyAB.bundle"
-            BlueprintName = "spotifyAB"
-            ReferencedContainer = "container:spotifyAB.xcodeproj">
+            BuildableName = "spotifyPlus.bundle"
+            BlueprintName = "spotifyPlus"
+            ReferencedContainer = "container:spotifyPlus.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

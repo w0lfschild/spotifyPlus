@@ -10,6 +10,7 @@
 		FB011F7F1C6FCEB700353211 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FB011F7B1C6FCEB700353211 /* main.m */; };
 		FB011F801C6FCEB700353211 /* ModernMask.tif in Resources */ = {isa = PBXBuildFile; fileRef = FB011F7C1C6FCEB700353211 /* ModernMask.tif */; };
 		FB011F811C6FCEB700353211 /* ModernOverlay.png in Resources */ = {isa = PBXBuildFile; fileRef = FB011F7D1C6FCEB700353211 /* ModernOverlay.png */; };
+		FB8755341C9DFB30000C9E27 /* ZKSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,7 +19,9 @@
 		FB011F7B1C6FCEB700353211 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = spotifyAB/main.m; sourceTree = "<group>"; };
 		FB011F7C1C6FCEB700353211 /* ModernMask.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = ModernMask.tif; path = spotifyAB/ModernMask.tif; sourceTree = "<group>"; };
 		FB011F7D1C6FCEB700353211 /* ModernOverlay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ModernOverlay.png; path = spotifyAB/ModernOverlay.png; sourceTree = "<group>"; };
-		FBD56CB91C65A9F100FF0DCA /* spotifyAB.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = spotifyAB.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB8755321C9DFB30000C9E27 /* ZKSwizzle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ZKSwizzle.h; path = spotifyAB/ZKSwizzle/ZKSwizzle.h; sourceTree = "<group>"; };
+		FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ZKSwizzle.m; path = spotifyAB/ZKSwizzle/ZKSwizzle.m; sourceTree = "<group>"; };
+		FBD56CB91C65A9F100FF0DCA /* spotifyPlus.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = spotifyPlus.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,22 +35,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		FB011F6F1C6FCE5700353211 /* spotifyAB */ = {
+		FB011F6F1C6FCE5700353211 /* spotifyPlus */ = {
 			isa = PBXGroup;
 			children = (
 				FB011F791C6FCEB700353211 /* Info.plist */,
+				FB8755321C9DFB30000C9E27 /* ZKSwizzle.h */,
+				FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */,
 				FB011F7A1C6FCEB700353211 /* main.h */,
 				FB011F7B1C6FCEB700353211 /* main.m */,
 				FB011F7C1C6FCEB700353211 /* ModernMask.tif */,
 				FB011F7D1C6FCEB700353211 /* ModernOverlay.png */,
 			);
-			name = spotifyAB;
+			name = spotifyPlus;
 			sourceTree = "<group>";
 		};
 		FBD56CB01C65A9F100FF0DCA = {
 			isa = PBXGroup;
 			children = (
-				FB011F6F1C6FCE5700353211 /* spotifyAB */,
+				FB011F6F1C6FCE5700353211 /* spotifyPlus */,
 				FBD56CBA1C65A9F100FF0DCA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -55,7 +60,7 @@
 		FBD56CBA1C65A9F100FF0DCA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FBD56CB91C65A9F100FF0DCA /* spotifyAB.bundle */,
+				FBD56CB91C65A9F100FF0DCA /* spotifyPlus.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -63,9 +68,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FBD56CB81C65A9F100FF0DCA /* spotifyAB */ = {
+		FBD56CB81C65A9F100FF0DCA /* spotifyPlus */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FBD56CBF1C65A9F100FF0DCA /* Build configuration list for PBXNativeTarget "spotifyAB" */;
+			buildConfigurationList = FBD56CBF1C65A9F100FF0DCA /* Build configuration list for PBXNativeTarget "spotifyPlus" */;
 			buildPhases = (
 				FBD56CB51C65A9F100FF0DCA /* Sources */,
 				FBD56CB61C65A9F100FF0DCA /* Frameworks */,
@@ -76,9 +81,9 @@
 			);
 			dependencies = (
 			);
-			name = spotifyAB;
+			name = spotifyPlus;
 			productName = spotiHack;
-			productReference = FBD56CB91C65A9F100FF0DCA /* spotifyAB.bundle */;
+			productReference = FBD56CB91C65A9F100FF0DCA /* spotifyPlus.bundle */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -95,7 +100,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FBD56CB41C65A9F100FF0DCA /* Build configuration list for PBXProject "spotifyAB" */;
+			buildConfigurationList = FBD56CB41C65A9F100FF0DCA /* Build configuration list for PBXProject "spotifyPlus" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -107,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FBD56CB81C65A9F100FF0DCA /* spotifyAB */,
+				FBD56CB81C65A9F100FF0DCA /* spotifyPlus */,
 			);
 		};
 /* End PBXProject section */
@@ -146,6 +151,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB011F7F1C6FCEB700353211 /* main.m in Sources */,
+				FB8755341C9DFB30000C9E27 /* ZKSwizzle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,7 +244,7 @@
 				INFOPLIST_FILE = spotifyAB/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				PRODUCT_BUNDLE_IDENTIFIER = org.w0lf.spotiHack;
-				PRODUCT_NAME = spotifyAB;
+				PRODUCT_NAME = spotifyPlus;
 				SKIP_INSTALL = YES;
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -251,7 +257,7 @@
 				INFOPLIST_FILE = spotifyAB/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
 				PRODUCT_BUNDLE_IDENTIFIER = org.w0lf.spotiHack;
-				PRODUCT_NAME = spotifyAB;
+				PRODUCT_NAME = spotifyPlus;
 				SKIP_INSTALL = YES;
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -260,7 +266,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FBD56CB41C65A9F100FF0DCA /* Build configuration list for PBXProject "spotifyAB" */ = {
+		FBD56CB41C65A9F100FF0DCA /* Build configuration list for PBXProject "spotifyPlus" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FBD56CBD1C65A9F100FF0DCA /* Debug */,
@@ -269,7 +275,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FBD56CBF1C65A9F100FF0DCA /* Build configuration list for PBXNativeTarget "spotifyAB" */ = {
+		FBD56CBF1C65A9F100FF0DCA /* Build configuration list for PBXNativeTarget "spotifyPlus" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FBD56CC01C65A9F100FF0DCA /* Debug */,

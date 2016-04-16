@@ -11,14 +11,18 @@
 struct TrackMetadata;
 
 main *plugin;
+NSMenu *playBack;
 NSImage *myImage;
+NSArray *pollTime;
 NSUserDefaults *sharedPrefs;
+bool menuNeedsUpdate = false;
 bool banners = false;
 bool showArt = true;
 bool muteAds = true;
 bool muteVid = false;
 int iconArt = 0;
 int sleepTime = 1000000;
+NSString *overlayPath;
 
 @implementation main
 
@@ -54,12 +58,17 @@ int sleepTime = 1000000;
     if ([sharedPrefs objectForKey:@"iconArt"] == nil)
         [sharedPrefs setInteger:0 forKey:@"iconArt"];
     
+    if ([sharedPrefs objectForKey:@"pollRate"] == nil)
+        [sharedPrefs setInteger:1000000 forKey:@"pollRate"];
+    
     
     muteAds = [[sharedPrefs objectForKey:@"muteAds"] boolValue];
     muteVid = [[sharedPrefs objectForKey:@"muteVid"] boolValue];
     banners = [[sharedPrefs objectForKey:@"banners"] boolValue];
     showArt = [[sharedPrefs objectForKey:@"showArt"] boolValue];
     iconArt = (int)[sharedPrefs integerForKey:@"iconArt"];
+    sleepTime = (int)[sharedPrefs integerForKey:@"pollRate"];
+    pollTime = [[NSArray alloc] initWithObjects:@"500000", @"1000000", @"2000000", @"3000000", @"5000000", nil];
     
     [plugin setMenu];
     [plugin pollThread];
@@ -115,56 +124,21 @@ int sleepTime = 1000000;
 {
     NSMenu *appMenu = [NSApp mainMenu];
     NSMenuItem *playBackItem = [appMenu itemAtIndex:4];
-    NSMenu *playBack = [playBackItem submenu];
+    playBack = [playBackItem submenu];
+    playBack = [plugin generateMenu:playBack];
+}
 
-    // Ads submenu
-    NSMenuItem *adsMenu = [[NSMenuItem alloc] init];
-    [adsMenu setTitle:@"Ad muting"];
-    NSMenu *submenuAds = [[NSMenu alloc] init];
-    [submenuAds setAutoenablesItems:NO];
-    [[submenuAds addItemWithTitle:@"Mute Audio Ads" action:@selector(setAdsMuting:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuAds addItemWithTitle:@"Mute Video Ads" action:@selector(setVidMuting:) keyEquivalent:@""] setTarget:plugin];
-    NSArray *adsMenuArray = [submenuAds itemArray];
-    [[adsMenuArray objectAtIndex:0] setState:muteAds];
-    [[adsMenuArray objectAtIndex:1] setState:muteVid];
-    [[adsMenuArray objectAtIndex:1] setEnabled:false];
-    [adsMenu setSubmenu:submenuAds];
-    
-    // Icon art submenu
-    NSMenuItem *artMenu = [[NSMenuItem alloc] init];
-    [artMenu setTitle:@"Icon Art"];
-    NSMenu *submenuArt = [[NSMenu alloc] init];
-    [[submenuArt addItemWithTitle:@"Stock icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuArt addItemWithTitle:@"Tilted icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuArt addItemWithTitle:@"Circular icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    if ((2 - iconArt) >= 0) [[[submenuArt itemArray] objectAtIndex:(2 - iconArt)] setState:NSOnState];
-    [artMenu setSubmenu:submenuArt];
-    
-    // spotifyAB submenu
-    NSMenu *submenuRoot = [[NSMenu alloc] init];
-    [[submenuRoot addItemWithTitle:@"Show icon art" action:@selector(setShowArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuRoot addItemWithTitle:@"Block All Ads" action:@selector(editHostFile:) keyEquivalent:@""] setTarget:plugin];
-    [submenuRoot addItem:adsMenu];
-    [submenuRoot addItem:artMenu];
-    [[[submenuRoot itemArray] objectAtIndex:0] setState:showArt];
-    [[[submenuRoot itemArray] objectAtIndex:1] setState:banners];
-    
-    // spotifyAB meun item
-    NSMenuItem *mainItem = [[NSMenuItem alloc] init];
-    [mainItem setTitle:@"spotifyAB"];
-    [mainItem setSubmenu:submenuRoot];
-    
-    // Add spotifyAB menu to playback menu
-    [playBack addItem:[NSMenuItem separatorItem]];
-    [playBack addItem:mainItem];
-    
-    NSMenuItem *spotifyItem = [appMenu itemAtIndex:0];
-    NSMenu *spotify = [spotifyItem submenu];
-//    [spotify addItem:[NSMenuItem separatorItem]];
-    [[spotify addItemWithTitle:@"Restart" action:@selector(restartMe) keyEquivalent:@""] setTarget:plugin];
-    
-//    NSMenu *dock = [[NSApp delegate] applicationDockMenu:spotify];
-//    NSLog(@"%@", dock);
+- (void)restartMe
+{
+    float seconds = 3.0;
+    NSTask *task = [[NSTask alloc] init];
+    NSMutableArray *args = [NSMutableArray array];
+    [args addObject:@"-c"];
+    [args addObject:[NSString stringWithFormat:@"sleep %f; open \"%@\"", seconds, [[NSBundle mainBundle] bundlePath]]];
+    [task setLaunchPath:@"/bin/sh"];
+    [task setArguments:args];
+    [task launch];
+    [NSApp terminate:nil];
 }
 
 - (IBAction)editHostFile:(id)sender
@@ -187,48 +161,36 @@ int sleepTime = 1000000;
     else
     {
         NSLog(@"Hosts file edited");
-        
         banners = !banners;
-        [sender setState:banners];
+//        [sender setState:banners];
         [sharedPrefs setBool:banners forKey:@"banners"];
+        menuNeedsUpdate = true;
         [plugin restartMe];
     }
 
 }
 
-- (void)restartMe
-{
-    float seconds = 3.0;
-    NSTask *task = [[NSTask alloc] init];
-    NSMutableArray *args = [NSMutableArray array];
-    [args addObject:@"-c"];
-    [args addObject:[NSString stringWithFormat:@"sleep %f; open \"%@\"", seconds, [[NSBundle mainBundle] bundlePath]]];
-    [task setLaunchPath:@"/bin/sh"];
-    [task setArguments:args];
-    [task launch];
-    [NSApp terminate:nil];
-}
-
 - (IBAction)setAdsMuting:(id)sender
 {
     muteAds = !muteAds;
-    [sender setState:muteAds];
+//    [sender setState:muteAds];
     [sharedPrefs setBool:muteAds forKey:@"muteAds"];
+    menuNeedsUpdate = true;
 }
 
 - (IBAction)setVidMuting:(id)sender
 {
     muteVid = !muteVid;
-    [sender setState:muteVid];
+//    [sender setState:muteVid];
     [sharedPrefs setBool:muteVid forKey:@"muteVid"];
+    menuNeedsUpdate = true;
 }
 
 - (IBAction)setShowArt:(id)sender
 {
     showArt = !showArt;
-    [sender setState:showArt];
+//    [sender setState:showArt];
     [sharedPrefs setBool:showArt forKey:@"showArt"];
-    
     if (showArt)
     {
         NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
@@ -236,6 +198,7 @@ int sleepTime = 1000000;
     } else {
         [NSApp setApplicationIconImage:nil];
     }
+    menuNeedsUpdate = true;
 }
 
 - (IBAction)setIconArt:(id)sender
@@ -244,15 +207,21 @@ int sleepTime = 1000000;
     NSArray *menuArray = [menu itemArray];
     int objectIndex = (int)[menuArray indexOfObject:sender];
     iconArt = 2 - objectIndex;
-    for (NSMenuItem *item in menuArray) {
-        if ([item isEqualTo:sender])
-            [item setState:NSOnState];
-        else
-            [item setState:NSOffState];
-    }
+    NSLog(@"%d", iconArt);
     NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
     [NSApp setApplicationIconImage:modifiedIcon];
     [sharedPrefs setInteger:iconArt forKey:@"iconArt"];
+    menuNeedsUpdate = true;
+}
+
+- (IBAction)setPolling:(id)sender
+{
+    NSMenu *menu = [sender menu];
+    NSArray *menuArray = [menu itemArray];
+    int objectIndex = (int)[menuArray indexOfObject:sender];
+    sleepTime = [(NSString*)[pollTime objectAtIndex:objectIndex] intValue];
+    [sharedPrefs setInteger:sleepTime forKey:@"pollRate"];
+    menuNeedsUpdate = true;
 }
 
 - (NSImage*)imageRotatedByDegrees:(CGFloat)degrees :(NSImage*)img
@@ -295,49 +264,27 @@ int sleepTime = 1000000;
     return rotatedImage;
 }
 
-- (CGImageRef)createCGImageFromFile:(NSString*)path
+- (NSImage*)roundCorners:(NSImage *)image
 {
-    // Get the URL for the pathname passed to the function.
-    NSURL *url = [NSURL fileURLWithPath:path];
-    CGImageRef        myImage = NULL;
-    CGImageSourceRef  myImageSource;
-    CFDictionaryRef   myOptions = NULL;
-    CFStringRef       myKeys[2];
-    CFTypeRef         myValues[2];
     
-    // Set up options if you want them. The options here are for
-    // caching the image in a decoded form and for using floating-point
-    // values if the image format supports them.
-    myKeys[0] = kCGImageSourceShouldCache;
-    myValues[0] = (CFTypeRef)kCFBooleanTrue;
-    myKeys[1] = kCGImageSourceShouldAllowFloat;
-    myValues[1] = (CFTypeRef)kCFBooleanTrue;
-    // Create the dictionary
-    myOptions = CFDictionaryCreate(NULL, (const void **) myKeys,
-                                   (const void **) myValues, 2,
-                                   &kCFTypeDictionaryKeyCallBacks,
-                                   & kCFTypeDictionaryValueCallBacks);
-    // Create an image source from the URL.
-    myImageSource = CGImageSourceCreateWithURL((CFURLRef)url, myOptions);
-    CFRelease(myOptions);
-    // Make sure the image source exists before continuing
-    if (myImageSource == NULL){
-        fprintf(stderr, "Image source is NULL.");
-        return  NULL;
-    }
-    // Create an image from the first item in the image source.
-    myImage = CGImageSourceCreateImageAtIndex(myImageSource,
-                                              0,
-                                              NULL);
+    NSImage *existingImage = image;
+    NSSize existingSize = [existingImage size];
+    NSSize newSize = NSMakeSize(existingSize.width, existingSize.height);
+    NSImage *composedImage = [[NSImage alloc] initWithSize:newSize];
     
-    CFRelease(myImageSource);
-    // Make sure the image exists before continuing
-    if (myImage == NULL){
-        fprintf(stderr, "Image not created from image source.");
-        return NULL;
-    }
+    [composedImage lockFocus];
+    [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
     
-    return myImage;
+    NSRect imageFrame = NSRectFromCGRect(CGRectMake((image.size.width * .05), (image.size.height * .05), (image.size.width * .9), (image.size.height * .9)));
+    NSBezierPath *clipPath = [NSBezierPath bezierPathWithRoundedRect:imageFrame xRadius:image.size.width yRadius:image.size.height];
+    [clipPath setWindingRule:NSEvenOddWindingRule];
+    [clipPath addClip];
+    
+    [image drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, newSize.width, newSize.height) operation:NSCompositeSourceOver fraction:1];
+    
+    [composedImage unlockFocus];
+    
+    return composedImage;
 }
 
 - (NSImage*)createIconImage:(NSImage*)stockCover :(int)resultType
@@ -346,23 +293,19 @@ int sleepTime = 1000000;
     // 1 = tilded
     // 2 = square
 //    NSString *myLittleCLIToolPath = NSProcessInfo.processInfo.arguments[0];
-    NSString *maskPath = @"/Library/Application Support/SIMBL/Plugins/spotifyAB.bundle/Contents/Resources/ModernMask.tif";
-    NSString *overlayPath = @"/Library/Application Support/SIMBL/Plugins/spotifyAB.bundle/Contents/Resources/ModernOverlay.png";
     NSImage *resultIMG = [[NSImage alloc] init];
     
     if (resultType == 0)
     {
-        [[stockCover TIFFRepresentation] writeToFile:@"/tmp/spotifyCover.tif" atomically:YES];
-        CGImageRef imgRef = [plugin createCGImageFromFile:@"/tmp/spotifyCover.tif"];
-        CGImageRef maskRef = [plugin createCGImageFromFile:maskPath];
-        CGImageRef actualMask = CGImageMaskCreate(CGImageGetWidth(maskRef),
-                                                  CGImageGetHeight(maskRef),
-                                                  CGImageGetBitsPerComponent(maskRef),
-                                                  CGImageGetBitsPerPixel(maskRef),
-                                                  CGImageGetBytesPerRow(maskRef),
-                                                  CGImageGetDataProvider(maskRef), NULL, false);
-        CGImageRef masked = CGImageCreateWithMask(imgRef, actualMask);
-        NSImage *rounded = [[NSImage alloc] initWithCGImage:masked size:NSZeroSize];
+        if (![overlayPath length])
+        {
+            overlayPath = @"/tmp";
+            NSBundle* bundle = [NSBundle bundleWithIdentifier:@"org.w0lf.spotiHack"];
+            NSString* bundlePath = [bundle bundlePath];
+            if ([bundlePath length])
+                overlayPath = [bundlePath stringByAppendingString:@"/Contents/Resources/ModernOverlay.png"];
+        }
+        NSImage *rounded = [self roundCorners:stockCover];
         NSImage *background = rounded;
         NSImage *overlay = [[NSImage alloc] initByReferencingFile:overlayPath];
         NSImage *newImage = [[NSImage alloc] initWithSize:[background size]];
@@ -558,6 +501,133 @@ int sleepTime = 1000000;
             usleep(sleepTime);
         }
     });
+}
+
+- (NSMenu*)generateMenu:(NSMenu*)original {
+    // Ads submenu
+    NSMenuItem *adsMenu = [[NSMenuItem alloc] init];
+    [adsMenu setTag:100];
+    [adsMenu setTitle:@"Ad muting"];
+    NSMenu *submenuAds = [[NSMenu alloc] init];
+    [submenuAds setAutoenablesItems:NO];
+    [[submenuAds addItemWithTitle:@"Mute Audio Ads" action:@selector(setAdsMuting:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuAds addItemWithTitle:@"Mute Video Ads" action:@selector(setVidMuting:) keyEquivalent:@""] setTarget:plugin];
+    NSArray *adsMenuArray = [submenuAds itemArray];
+    [[adsMenuArray objectAtIndex:0] setState:muteAds];
+    [[adsMenuArray objectAtIndex:1] setState:muteVid];
+    [[adsMenuArray objectAtIndex:1] setEnabled:false];
+    [adsMenu setSubmenu:submenuAds];
+    
+    // Icon art submenu
+    NSMenuItem *artMenu = [[NSMenuItem alloc] init];
+    [artMenu setTag:101];
+    [artMenu setTitle:@"Icon Art"];
+    NSMenu *submenuArt = [[NSMenu alloc] init];
+    [[submenuArt addItemWithTitle:@"Stock icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuArt addItemWithTitle:@"Tilted icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuArt addItemWithTitle:@"Circular icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    for (NSMenuItem* item in [submenuArt itemArray]) [item setState:NSOffState];
+    if ((2 - iconArt) >= 0) [[[submenuArt itemArray] objectAtIndex:(2 - iconArt)] setState:NSOnState];
+    [artMenu setSubmenu:submenuArt];
+    
+    // Polling submenu
+    NSMenuItem *pollMenu = [[NSMenuItem alloc] init];
+    [pollMenu setTag:102];
+    [pollMenu setTitle:@"Polling"];
+    NSMenu *submenuPoll = [[NSMenu alloc] init];
+    [[submenuPoll addItemWithTitle:@"0.5 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuPoll addItemWithTitle:@"1.0 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuPoll addItemWithTitle:@"2.0 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuPoll addItemWithTitle:@"3.0 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuPoll addItemWithTitle:@"5.0 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    for (NSMenuItem* item in [submenuPoll itemArray]) [item setState:NSOffState];
+    long index = [pollTime indexOfObject:[[NSNumber numberWithInt:sleepTime] stringValue]];
+    [[[submenuPoll itemArray] objectAtIndex:index] setState:NSOnState];
+    [pollMenu setSubmenu:submenuPoll];
+    
+    // spotify+ submenu
+    NSMenu *submenuRoot = [[NSMenu alloc] init];
+    [submenuRoot setTitle:@"Spotify+"];
+    [[submenuRoot addItemWithTitle:@"Show icon art" action:@selector(setShowArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuRoot addItemWithTitle:@"Block All Ads" action:@selector(editHostFile:) keyEquivalent:@""] setTarget:plugin];
+    [submenuRoot addItem:adsMenu];
+    [submenuRoot addItem:artMenu];
+    [submenuRoot addItem:pollMenu];
+    [[[submenuRoot itemArray] objectAtIndex:0] setState:showArt];
+    [[[submenuRoot itemArray] objectAtIndex:0] setTag:98];
+    [[[submenuRoot itemArray] objectAtIndex:1] setState:banners];
+    [[[submenuRoot itemArray] objectAtIndex:1] setTag:99];
+    
+    // spotify+ meun item
+    NSMenuItem *mainItem = [[NSMenuItem alloc] init];
+    [mainItem setTitle:@"spotify+"];
+    [mainItem setSubmenu:submenuRoot];
+    
+    // Add spotify+ item
+    [original addItem:[NSMenuItem separatorItem]];
+    [original addItem:mainItem];
+    
+    // Add restart item
+    [original addItem:[NSMenuItem separatorItem]];
+    [[original addItemWithTitle:@"Restart Spotify" action:@selector(restartMe) keyEquivalent:@""] setTarget:plugin];
+    
+    return original;
+}
+
+- (void)updateMenu:(NSMenu*)original {
+    
+    NSMenuItem* spotifyPlus = [original itemWithTitle:@"spotify+"];
+    NSMenu* updatedMenu = [spotifyPlus submenu];
+
+    [[updatedMenu itemWithTag:98] setState:showArt];
+    [[updatedMenu itemWithTag:99] setState:banners];
+
+    NSMenuItem* adsMenu = [updatedMenu itemWithTag:100];
+    NSArray* adsSub = [[adsMenu submenu] itemArray];
+    [[adsSub objectAtIndex:0] setState:muteAds];
+    [[adsSub objectAtIndex:1] setState:muteVid];
+    
+    NSMenuItem* artMenu = [updatedMenu itemWithTag:101];
+    NSArray* artSub = [[artMenu submenu] itemArray];
+    for (NSMenuItem* obj in artSub) [obj setState:NSOffState];
+    [[artSub objectAtIndex:(2 - iconArt)] setState:NSOnState];
+    
+    NSMenuItem* polMenu = [updatedMenu itemWithTag:102];
+    NSArray* polSub = [[polMenu submenu] itemArray];
+    for (NSMenuItem* obj in polSub) [obj setState:NSOffState];
+    long index = [pollTime indexOfObject:[[NSNumber numberWithInt:sleepTime] stringValue]];
+    [[polSub objectAtIndex:index] setState:NSOnState];
+    
+}
+
+@end
+
+ZKSwizzleInterface(_spotifyPlusCMH, ClientMenuHandler, NSObject <NSMenuDelegate>)
+@implementation _spotifyPlusCMH
+
+- (BOOL)menu:(id)arg1 updateItem:(id)arg2 atIndex:(long long)arg3 shouldCancel:(BOOL)arg4 {
+    if (menuNeedsUpdate)
+    {
+        NSMenu *appMenu = [NSApp mainMenu];
+        NSMenuItem *playBackItem = [appMenu itemAtIndex:4];
+        playBack = [playBackItem submenu];
+        [plugin updateMenu:playBack];
+        menuNeedsUpdate = false;
+        return true;
+    }
+    return ZKOrig(BOOL, arg1, arg2, arg3, arg4);
+}
+
+@end
+
+
+ZKSwizzleInterface(_spotifyPlusCAD, ClientAppDelegate, NSObject <NSApplicationDelegate>)
+@implementation _spotifyPlusCAD
+
+- (NSMenu *)applicationDockMenu:(NSApplication *)arg1 {
+    NSMenu* result = ZKOrig(NSMenu*, arg1);
+    result = [plugin generateMenu:result];
+    return result;
 }
 
 @end
