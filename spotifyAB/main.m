@@ -20,6 +20,7 @@ bool banners = false;
 bool showArt = true;
 bool muteAds = true;
 bool muteVid = false;
+bool showBadge = true;
 int iconArt = 0;
 int sleepTime = 1000000;
 NSString *overlayPath;
@@ -43,6 +44,9 @@ NSString *overlayPath;
     if (!sharedPrefs)
         sharedPrefs = [NSUserDefaults standardUserDefaults];
     
+    if ([sharedPrefs objectForKey:@"showBadge"] == nil)
+        [sharedPrefs setBool:true forKey:@"showBadge"];
+    
     if ([sharedPrefs objectForKey:@"muteAds"] == nil)
         [sharedPrefs setBool:true forKey:@"muteAds"];
     
@@ -62,6 +66,7 @@ NSString *overlayPath;
         [sharedPrefs setInteger:1000000 forKey:@"pollRate"];
     
     
+    showBadge = [[sharedPrefs objectForKey:@"showBadge"] boolValue];
     muteAds = [[sharedPrefs objectForKey:@"muteAds"] boolValue];
     muteVid = [[sharedPrefs objectForKey:@"muteVid"] boolValue];
     banners = [[sharedPrefs objectForKey:@"banners"] boolValue];
@@ -139,6 +144,14 @@ NSString *overlayPath;
     [task setArguments:args];
     [task launch];
     [NSApp terminate:nil];
+}
+
+- (IBAction)toggleBadges:(id)sender
+{
+    showBadge = !showBadge;
+    [sharedPrefs setBool:showBadge forKey:@"showBadge"];
+    if (!showBadge)
+        [[NSApp dockTile] setBadgeLabel:nil];
 }
 
 - (IBAction)editHostFile:(id)sender
@@ -372,7 +385,8 @@ NSString *overlayPath;
                     [thisApp setSoundVolume:appVolume];
                 }
                 
-                [[NSApp dockTile] setBadgeLabel:@"Paused"];
+                if (showBadge)
+                    [[NSApp dockTile] setBadgeLabel:@"Paused"];
                 
                 // Video AD (Not sure how to detect right now)
 //                if (muteVid)
@@ -493,7 +507,8 @@ NSString *overlayPath;
                 
                 if ((NSNumber *)[thisApp soundVolume] < [NSNumber numberWithFloat:1.0])
                 {
-                    [[NSApp dockTile] setBadgeLabel:@"Muted"];
+                    if (showBadge)
+                        [[NSApp dockTile] setBadgeLabel:@"Muted"];
                 } else {
                     [[NSApp dockTile] setBadgeLabel:nil];
                 }
@@ -550,6 +565,7 @@ NSString *overlayPath;
     [submenuRoot setTitle:@"Spotify+"];
     [[submenuRoot addItemWithTitle:@"Show icon art" action:@selector(setShowArt:) keyEquivalent:@""] setTarget:plugin];
     [[submenuRoot addItemWithTitle:@"Block All Ads" action:@selector(editHostFile:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuRoot addItemWithTitle:@"Show Badge" action:@selector(toggleBadges:) keyEquivalent:@""] setTarget:plugin];
     [submenuRoot addItem:adsMenu];
     [submenuRoot addItem:artMenu];
     [submenuRoot addItem:pollMenu];
@@ -557,6 +573,8 @@ NSString *overlayPath;
     [[[submenuRoot itemArray] objectAtIndex:0] setTag:98];
     [[[submenuRoot itemArray] objectAtIndex:1] setState:banners];
     [[[submenuRoot itemArray] objectAtIndex:1] setTag:99];
+    [[[submenuRoot itemArray] objectAtIndex:2] setState:showBadge];
+    [[[submenuRoot itemArray] objectAtIndex:2] setTag:97];
     
     // spotify+ meun item
     NSMenuItem *mainItem = [[NSMenuItem alloc] init];
@@ -579,6 +597,7 @@ NSString *overlayPath;
     NSMenuItem* spotifyPlus = [original itemWithTitle:@"spotify+"];
     NSMenu* updatedMenu = [spotifyPlus submenu];
 
+    [[updatedMenu itemWithTag:97] setState:showBadge];
     [[updatedMenu itemWithTag:98] setState:showArt];
     [[updatedMenu itemWithTag:99] setState:banners];
 
