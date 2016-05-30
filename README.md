@@ -1,10 +1,12 @@
-# spotifyAB - [Download](https://github.com/w0lfschild/spotifyAB/raw/master/build/spotifyAB.zip)
+# spotifyPlus
 
-![preview](spotifyAB.png) 
+![preview](preview.png) 
 
 # Information:
 
-- spotifyAB is a SIMBL plugin that adds some features to the Spotify desktop player
+- Designed for 10.9+ 
+- Designed for Spotify 1.0.28+  
+- spotifyPlus is a SIMBL plugin that adds some features to the Spotify desktop player
     - Automatically mute audio ads
     - Block all ads (requires password to enable)
     - Change the dock icon to the now playing track art (three options)
@@ -12,16 +14,21 @@
         - Tilted square
         - Circular
     - Add badge to app icon when muted or paused
-    - Settings located in Playback menu
+    - Restart Spotify
+    - Settings in Dock menu and Playback menu
 - Author: [w0lfschild](https://github.com/w0lfschild)
+
+# Note:
+
+-
 
 # Installation:
 
-1. Install [SIMBL](https://github.com/w0lfschild/SIMBLPlugins/raw/master/SIMBLInstaller/SIMBLInstaller.zip)
-2. Download [spotifyAB bundle](https://github.com/w0lfschild/spotifyAB/raw/master/build/spotifyAB.zip)
-3. Unzip download
-4. Copy to ``/Library/Application Support/SIMBL/Plugins``
-5. Restart Spotify to have spotifyAB plugin loaded
+1. Download [mySIMBL](https://github.com/w0lfschild/app_updates/raw/master/mySIMBL/mySIMBL_0.2.5.zip)
+2. Download [spotifyPlus](https://github.com/w0lfschild/spotifyPlus/raw/master/build/spotifyPlus.zip)
+3. Unzip downloads
+4. Open `spotifyPlus.bundle` with `mySIMBL.app`
+5. Restart Spotify
 
 ### License:
 Pretty much the BSD license, just don't repackage it and call it your own please!    
