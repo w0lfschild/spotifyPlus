@@ -161,10 +161,16 @@ NSString *overlayPath;
     BOOL success = false;
     if (!banners)
     {
-        NSArray *args = [[NSArray alloc] initWithObjects:@"\\\"0.0.0.0 pubads.g.doubleclick.net\n0.0.0.0 securepubads.g.doubleclick.net\\\"", @">>", @"/private/etc/hosts",  nil];
+        NSArray *args = [[NSArray alloc] initWithObjects:@"\\\"\
+                         0.0.0.0 pubads.g.doubleclick.net\n\
+                         0.0.0.0 securepubads.g.doubleclick.net\n\
+                         0.0.0.0 spclient.wg.spotify.com\\\"", @">>", @"/private/etc/hosts",  nil];
         success = [plugin runProcessAsAdministrator:@"/bin/echo" withArguments:args output:&output errorDescription:&processErrorDescription];
     } else {
         NSArray *args = [[NSArray alloc] initWithObjects:@"-i", @"''", @"'/g.doubleclick.net/d'", @"/private/etc/hosts", nil];
+        success = [plugin runProcessAsAdministrator:@"/usr/bin/sed" withArguments:args output:&output errorDescription:&processErrorDescription];
+        
+        args = [[NSArray alloc] initWithObjects:@"-i", @"''", @"'/wg.spotify.com/d'", @"/private/etc/hosts", nil];
         success = [plugin runProcessAsAdministrator:@"/usr/bin/sed" withArguments:args output:&output errorDescription:&processErrorDescription];
     }
     if (!success) // Process failed to run
@@ -639,6 +645,16 @@ ZKSwizzleInterface(_spotifyPlusCMH, ClientMenuHandler, NSObject <NSMenuDelegate>
 
 @end
 
+ZKSwizzleInterface(_spotifyPlusNSAD, SPTClientMenuHandler, NSObject <NSMenuDelegate>)
+@implementation _spotifyPlusNSAD
+
+- (NSMenu *)applicationDockMenu:(NSApplication *)arg1 {
+    NSMenu* result = ZKOrig(NSMenu*, arg1);
+    result = [plugin generateMenu:result];
+    return result;
+}
+
+@end
 
 ZKSwizzleInterface(_spotifyPlusCAD, ClientAppDelegate, NSObject <NSApplicationDelegate>)
 @implementation _spotifyPlusCAD

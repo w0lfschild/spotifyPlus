@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		FB011F7F1C6FCEB700353211 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FB011F7B1C6FCEB700353211 /* main.m */; };
-		FB011F801C6FCEB700353211 /* ModernMask.tif in Resources */ = {isa = PBXBuildFile; fileRef = FB011F7C1C6FCEB700353211 /* ModernMask.tif */; };
 		FB011F811C6FCEB700353211 /* ModernOverlay.png in Resources */ = {isa = PBXBuildFile; fileRef = FB011F7D1C6FCEB700353211 /* ModernOverlay.png */; };
 		FB8755341C9DFB30000C9E27 /* ZKSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */; };
 /* End PBXBuildFile section */
@@ -17,7 +16,6 @@
 		FB011F791C6FCEB700353211 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = spotifyAB/Info.plist; sourceTree = "<group>"; };
 		FB011F7A1C6FCEB700353211 /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = main.h; path = spotifyAB/main.h; sourceTree = "<group>"; };
 		FB011F7B1C6FCEB700353211 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = spotifyAB/main.m; sourceTree = "<group>"; };
-		FB011F7C1C6FCEB700353211 /* ModernMask.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = ModernMask.tif; path = spotifyAB/ModernMask.tif; sourceTree = "<group>"; };
 		FB011F7D1C6FCEB700353211 /* ModernOverlay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ModernOverlay.png; path = spotifyAB/ModernOverlay.png; sourceTree = "<group>"; };
 		FB8755321C9DFB30000C9E27 /* ZKSwizzle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ZKSwizzle.h; path = spotifyAB/ZKSwizzle/ZKSwizzle.h; sourceTree = "<group>"; };
 		FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ZKSwizzle.m; path = spotifyAB/ZKSwizzle/ZKSwizzle.m; sourceTree = "<group>"; };
@@ -43,7 +41,6 @@
 				FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */,
 				FB011F7A1C6FCEB700353211 /* main.h */,
 				FB011F7B1C6FCEB700353211 /* main.m */,
-				FB011F7C1C6FCEB700353211 /* ModernMask.tif */,
 				FB011F7D1C6FCEB700353211 /* ModernOverlay.png */,
 			);
 			name = spotifyPlus;
@@ -92,7 +89,7 @@
 		FBD56CB11C65A9F100FF0DCA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = "Wolfgang Baird";
 				TargetAttributes = {
 					FBD56CB81C65A9F100FF0DCA = {
@@ -122,7 +119,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FB011F801C6FCEB700353211 /* ModernMask.tif in Resources */,
 				FB011F811C6FCEB700353211 /* ModernOverlay.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -171,8 +167,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -214,8 +212,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
