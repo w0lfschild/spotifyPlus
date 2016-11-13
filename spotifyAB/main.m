@@ -11,11 +11,10 @@
 struct TrackMetadata;
 
 main *plugin;
-NSMenu *playBack;
+NSMenu *spotifyPlus;
 NSImage *myImage;
 NSArray *pollTime;
 NSUserDefaults *sharedPrefs;
-bool menuNeedsUpdate = false;
 bool banners = false;
 bool showArt = true;
 bool muteAds = true;
@@ -127,10 +126,11 @@ NSString *overlayPath;
 
 - (void)setMenu
 {
-    NSMenu *appMenu = [NSApp mainMenu];
-    NSMenuItem *playBackItem = [appMenu itemAtIndex:4];
-    playBack = [playBackItem submenu];
-    playBack = [plugin generateMenu:playBack];
+    NSMenu* mainMenu = [NSApp mainMenu];
+    spotifyPlus = [plugin spotPlusMenu];
+    NSMenuItem* newItem = [[NSMenuItem alloc] initWithTitle:@"Item" action:nil keyEquivalent:@""];
+    [newItem setSubmenu:spotifyPlus];
+    [mainMenu insertItem:newItem atIndex:5];
 }
 
 - (void)restartMe
@@ -144,14 +144,6 @@ NSString *overlayPath;
     [task setArguments:args];
     [task launch];
     [NSApp terminate:nil];
-}
-
-- (IBAction)toggleBadges:(id)sender
-{
-    showBadge = !showBadge;
-    [sharedPrefs setBool:showBadge forKey:@"showBadge"];
-    if (!showBadge)
-        [[NSApp dockTile] setBadgeLabel:nil];
 }
 
 - (IBAction)editHostFile:(id)sender
@@ -181,34 +173,39 @@ NSString *overlayPath;
     {
         NSLog(@"Hosts file edited");
         banners = !banners;
-//        [sender setState:banners];
         [sharedPrefs setBool:banners forKey:@"banners"];
-        menuNeedsUpdate = true;
+        [plugin updateMenu:spotifyPlus];
         [plugin restartMe];
     }
 
 }
 
+- (IBAction)toggleBadges:(id)sender
+{
+    showBadge = !showBadge;
+    [sharedPrefs setBool:showBadge forKey:@"showBadge"];
+    if (!showBadge)
+        [[NSApp dockTile] setBadgeLabel:nil];
+    [plugin updateMenu:spotifyPlus];
+}
+
 - (IBAction)setAdsMuting:(id)sender
 {
     muteAds = !muteAds;
-//    [sender setState:muteAds];
     [sharedPrefs setBool:muteAds forKey:@"muteAds"];
-    menuNeedsUpdate = true;
+    [plugin updateMenu:spotifyPlus];
 }
 
 - (IBAction)setVidMuting:(id)sender
 {
     muteVid = !muteVid;
-//    [sender setState:muteVid];
     [sharedPrefs setBool:muteVid forKey:@"muteVid"];
-    menuNeedsUpdate = true;
+    [plugin updateMenu:spotifyPlus];
 }
 
 - (IBAction)setShowArt:(id)sender
 {
     showArt = !showArt;
-//    [sender setState:showArt];
     [sharedPrefs setBool:showArt forKey:@"showArt"];
     if (showArt)
     {
@@ -217,7 +214,7 @@ NSString *overlayPath;
     } else {
         [NSApp setApplicationIconImage:nil];
     }
-    menuNeedsUpdate = true;
+    [plugin updateMenu:spotifyPlus];
 }
 
 - (IBAction)setIconArt:(id)sender
@@ -226,11 +223,11 @@ NSString *overlayPath;
     NSArray *menuArray = [menu itemArray];
     int objectIndex = (int)[menuArray indexOfObject:sender];
     iconArt = 2 - objectIndex;
-    NSLog(@"%d", iconArt);
+    NSLog(@"Icon art: %d", iconArt);
     NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
     [NSApp setApplicationIconImage:modifiedIcon];
     [sharedPrefs setInteger:iconArt forKey:@"iconArt"];
-    menuNeedsUpdate = true;
+    [plugin updateMenu:spotifyPlus];
 }
 
 - (IBAction)setPolling:(id)sender
@@ -240,7 +237,12 @@ NSString *overlayPath;
     int objectIndex = (int)[menuArray indexOfObject:sender];
     sleepTime = [(NSString*)[pollTime objectAtIndex:objectIndex] intValue];
     [sharedPrefs setInteger:sleepTime forKey:@"pollRate"];
-    menuNeedsUpdate = true;
+    [plugin updateMenu:spotifyPlus];
+}
+
+- (IBAction)checkUpdate:(id)sender
+{
+    [[NSWorkspace sharedWorkspace] launchAppWithBundleIdentifier:@"org.w0lf.mySIMBL" options:NSWorkspaceLaunchDefault additionalEventParamDescriptor:nil launchIdentifier:nil];
 }
 
 - (NSImage*)imageRotatedByDegrees:(CGFloat)degrees :(NSImage*)img
@@ -524,7 +526,22 @@ NSString *overlayPath;
     });
 }
 
-- (NSMenu*)generateMenu:(NSMenu*)original {
+- (NSMenu*)dockaddspotPlus:(NSMenu*)original {
+    // Spotify+ meun item
+    NSMenuItem *mainItem = [[NSMenuItem alloc] init];
+    [mainItem setTitle:@"Spotify+"];
+    
+    NSMenu* dockspotplusMenu = [plugin spotPlusMenu];
+    [mainItem setSubmenu:dockspotplusMenu];
+    
+    // Add spotify+ item
+    [original addItem:[NSMenuItem separatorItem]];
+    [original addItem:mainItem];
+    
+    return original;
+}
+
+- (NSMenu*)spotPlusMenu {
     // Ads submenu
     NSMenuItem *adsMenu = [[NSMenuItem alloc] init];
     [adsMenu setTag:100];
@@ -542,11 +559,11 @@ NSString *overlayPath;
     // Icon art submenu
     NSMenuItem *artMenu = [[NSMenuItem alloc] init];
     [artMenu setTag:101];
-    [artMenu setTitle:@"Icon Art"];
+    [artMenu setTitle:@"Icon art style"];
     NSMenu *submenuArt = [[NSMenu alloc] init];
-    [[submenuArt addItemWithTitle:@"Stock icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuArt addItemWithTitle:@"Tilted icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuArt addItemWithTitle:@"Circular icon art" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuArt addItemWithTitle:@"Square" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuArt addItemWithTitle:@"Tilted" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuArt addItemWithTitle:@"Circular" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
     for (NSMenuItem* item in [submenuArt itemArray]) [item setState:NSOffState];
     if ((2 - iconArt) >= 0) [[[submenuArt itemArray] objectAtIndex:(2 - iconArt)] setState:NSOnState];
     [artMenu setSubmenu:submenuArt];
@@ -556,11 +573,11 @@ NSString *overlayPath;
     [pollMenu setTag:102];
     [pollMenu setTitle:@"Polling"];
     NSMenu *submenuPoll = [[NSMenu alloc] init];
-    [[submenuPoll addItemWithTitle:@"0.5 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuPoll addItemWithTitle:@"1.0 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuPoll addItemWithTitle:@"2.0 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuPoll addItemWithTitle:@"3.0 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuPoll addItemWithTitle:@"5.0 Seconds" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuPoll addItemWithTitle:@"0.5s" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuPoll addItemWithTitle:@"1.0s" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuPoll addItemWithTitle:@"2.0s" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuPoll addItemWithTitle:@"3.0s" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuPoll addItemWithTitle:@"5.0s" action:@selector(setPolling:) keyEquivalent:@""] setTarget:plugin];
     for (NSMenuItem* item in [submenuPoll itemArray]) [item setState:NSOffState];
     long index = [pollTime indexOfObject:[[NSNumber numberWithInt:sleepTime] stringValue]];
     [[[submenuPoll itemArray] objectAtIndex:index] setState:NSOnState];
@@ -569,40 +586,33 @@ NSString *overlayPath;
     // spotify+ submenu
     NSMenu *submenuRoot = [[NSMenu alloc] init];
     [submenuRoot setTitle:@"Spotify+"];
-    [[submenuRoot addItemWithTitle:@"Show icon art" action:@selector(setShowArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuRoot addItemWithTitle:@"Block All Ads" action:@selector(editHostFile:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuRoot addItemWithTitle:@"Show Badge" action:@selector(toggleBadges:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuRoot addItemWithTitle:@"Block all ads" action:@selector(editHostFile:) keyEquivalent:@""] setTarget:plugin];
     [submenuRoot addItem:adsMenu];
+    [submenuRoot addItem:[NSMenuItem separatorItem]];
+    [[submenuRoot addItemWithTitle:@"Show icon art" action:@selector(setShowArt:) keyEquivalent:@""] setTarget:plugin];
     [submenuRoot addItem:artMenu];
+    [submenuRoot addItem:[NSMenuItem separatorItem]];
+    [[submenuRoot addItemWithTitle:@"Show muted badge" action:@selector(toggleBadges:) keyEquivalent:@""] setTarget:plugin];
     [submenuRoot addItem:pollMenu];
-    [[[submenuRoot itemArray] objectAtIndex:0] setState:showArt];
-    [[[submenuRoot itemArray] objectAtIndex:0] setTag:98];
-    [[[submenuRoot itemArray] objectAtIndex:1] setState:banners];
-    [[[submenuRoot itemArray] objectAtIndex:1] setTag:99];
-    [[[submenuRoot itemArray] objectAtIndex:2] setState:showBadge];
-    [[[submenuRoot itemArray] objectAtIndex:2] setTag:97];
+    [submenuRoot addItem:[NSMenuItem separatorItem]];
+    [[submenuRoot addItemWithTitle:@"Check for updates" action:@selector(checkUpdate:) keyEquivalent:@""] setTarget:plugin];
+    [submenuRoot addItem:[NSMenuItem separatorItem]];
+    [[submenuRoot addItemWithTitle:@"Restart Spotify" action:@selector(restartMe) keyEquivalent:@""] setTarget:plugin];
+    [[[submenuRoot itemArray] objectAtIndex:0] setState:banners];
+    [[[submenuRoot itemArray] objectAtIndex:0] setTag:99];
+    [[[submenuRoot itemArray] objectAtIndex:3] setState:showArt];
+    [[[submenuRoot itemArray] objectAtIndex:3] setTag:98];
+    [[[submenuRoot itemArray] objectAtIndex:6] setState:showBadge];
+    [[[submenuRoot itemArray] objectAtIndex:6] setTag:97];
     
-    // spotify+ meun item
-    NSMenuItem *mainItem = [[NSMenuItem alloc] init];
-    [mainItem setTitle:@"spotify+"];
-    [mainItem setSubmenu:submenuRoot];
-    
-    // Add spotify+ item
-    [original addItem:[NSMenuItem separatorItem]];
-    [original addItem:mainItem];
-    
-    // Add restart item
-    [original addItem:[NSMenuItem separatorItem]];
-    [[original addItemWithTitle:@"Restart Spotify" action:@selector(restartMe) keyEquivalent:@""] setTarget:plugin];
-    
-    return original;
+    return submenuRoot;
 }
 
 - (void)updateMenu:(NSMenu*)original {
+    if (original)
+    {
+    NSMenu* updatedMenu = original;
     
-    NSMenuItem* spotifyPlus = [original itemWithTitle:@"spotify+"];
-    NSMenu* updatedMenu = [spotifyPlus submenu];
-
     [[updatedMenu itemWithTag:97] setState:showBadge];
     [[updatedMenu itemWithTag:98] setState:showArt];
     [[updatedMenu itemWithTag:99] setState:banners];
@@ -622,25 +632,7 @@ NSString *overlayPath;
     for (NSMenuItem* obj in polSub) [obj setState:NSOffState];
     long index = [pollTime indexOfObject:[[NSNumber numberWithInt:sleepTime] stringValue]];
     [[polSub objectAtIndex:index] setState:NSOnState];
-    
-}
-
-@end
-
-ZKSwizzleInterface(_spotifyPlusCMH, ClientMenuHandler, NSObject <NSMenuDelegate>)
-@implementation _spotifyPlusCMH
-
-- (BOOL)menu:(id)arg1 updateItem:(id)arg2 atIndex:(long long)arg3 shouldCancel:(BOOL)arg4 {
-    if (menuNeedsUpdate)
-    {
-        NSMenu *appMenu = [NSApp mainMenu];
-        NSMenuItem *playBackItem = [appMenu itemAtIndex:4];
-        playBack = [playBackItem submenu];
-        [plugin updateMenu:playBack];
-        menuNeedsUpdate = false;
-        return true;
     }
-    return ZKOrig(BOOL, arg1, arg2, arg3, arg4);
 }
 
 @end
@@ -650,18 +642,7 @@ ZKSwizzleInterface(_spotifyPlusNSAD, SPTClientMenuHandler, NSObject <NSMenuDeleg
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)arg1 {
     NSMenu* result = ZKOrig(NSMenu*, arg1);
-    result = [plugin generateMenu:result];
-    return result;
-}
-
-@end
-
-ZKSwizzleInterface(_spotifyPlusCAD, ClientAppDelegate, NSObject <NSApplicationDelegate>)
-@implementation _spotifyPlusCAD
-
-- (NSMenu *)applicationDockMenu:(NSApplication *)arg1 {
-    NSMenu* result = ZKOrig(NSMenu*, arg1);
-    result = [plugin generateMenu:result];
+    result = [plugin dockaddspotPlus:result];
     return result;
 }
 
