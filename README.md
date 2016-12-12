@@ -15,16 +15,12 @@
         - Circular
     - Add badge to app icon when muted or paused
     - Restart Spotify
-    - Settings in Dock menu and Playback menu
+    - Settings in Dock menu and Spotify+ item in the menubar
 - Author: [w0lfschild](https://github.com/w0lfschild)
-
-# Note:
-
--
 
 # Installation:
 
-1. Download [mySIMBL](https://github.com/w0lfschild/app_updates/raw/master/mySIMBL/mySIMBL_0.2.5.zip)
+1. Download [mySIMBL](https://github.com/w0lfschild/app_updates/raw/master/mySIMBL/mySIMBL_master.zip)
 2. Download [spotifyPlus](https://github.com/w0lfschild/spotifyPlus/raw/master/build/spotifyPlus.zip)
 3. Unzip downloads
 4. Open `spotifyPlus.bundle` with `mySIMBL.app`
