@@ -8,17 +8,19 @@
 
 /* Begin PBXBuildFile section */
 		FB011F7F1C6FCEB700353211 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FB011F7B1C6FCEB700353211 /* main.m */; };
-		FB011F811C6FCEB700353211 /* ModernOverlay.png in Resources */ = {isa = PBXBuildFile; fileRef = FB011F7D1C6FCEB700353211 /* ModernOverlay.png */; };
 		FB8755341C9DFB30000C9E27 /* ZKSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */; };
+		FBB153672002D81F00C49C10 /* ModernOverlay.png in Resources */ = {isa = PBXBuildFile; fileRef = FBB153652002D81F00C49C10 /* ModernOverlay.png */; };
+		FBB1536C2002DBCE00C49C10 /* ClassicOverlay.png in Resources */ = {isa = PBXBuildFile; fileRef = FBB1536B2002DBCE00C49C10 /* ClassicOverlay.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		FB011F791C6FCEB700353211 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = spotifyAB/Info.plist; sourceTree = "<group>"; };
 		FB011F7A1C6FCEB700353211 /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = main.h; path = spotifyAB/main.h; sourceTree = "<group>"; };
 		FB011F7B1C6FCEB700353211 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = spotifyAB/main.m; sourceTree = "<group>"; };
-		FB011F7D1C6FCEB700353211 /* ModernOverlay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ModernOverlay.png; path = spotifyAB/ModernOverlay.png; sourceTree = "<group>"; };
 		FB8755321C9DFB30000C9E27 /* ZKSwizzle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ZKSwizzle.h; path = spotifyAB/ZKSwizzle/ZKSwizzle.h; sourceTree = "<group>"; };
 		FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ZKSwizzle.m; path = spotifyAB/ZKSwizzle/ZKSwizzle.m; sourceTree = "<group>"; };
+		FBB153652002D81F00C49C10 /* ModernOverlay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ModernOverlay.png; path = spotifyAB/ModernOverlay.png; sourceTree = "<group>"; };
+		FBB1536B2002DBCE00C49C10 /* ClassicOverlay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ClassicOverlay.png; path = spotifyAB/ClassicOverlay.png; sourceTree = "<group>"; };
 		FBD56CB91C65A9F100FF0DCA /* spotifyPlus.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = spotifyPlus.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -36,14 +38,31 @@
 		FB011F6F1C6FCE5700353211 /* spotifyPlus */ = {
 			isa = PBXGroup;
 			children = (
-				FB011F791C6FCEB700353211 /* Info.plist */,
-				FB8755321C9DFB30000C9E27 /* ZKSwizzle.h */,
-				FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */,
+				FBB153692002D84300C49C10 /* ZKSwizzle */,
+				FBB1536A2002D84700C49C10 /* Overlays */,
 				FB011F7A1C6FCEB700353211 /* main.h */,
 				FB011F7B1C6FCEB700353211 /* main.m */,
-				FB011F7D1C6FCEB700353211 /* ModernOverlay.png */,
+				FB011F791C6FCEB700353211 /* Info.plist */,
 			);
 			name = spotifyPlus;
+			sourceTree = "<group>";
+		};
+		FBB153692002D84300C49C10 /* ZKSwizzle */ = {
+			isa = PBXGroup;
+			children = (
+				FB8755321C9DFB30000C9E27 /* ZKSwizzle.h */,
+				FB8755331C9DFB30000C9E27 /* ZKSwizzle.m */,
+			);
+			name = ZKSwizzle;
+			sourceTree = "<group>";
+		};
+		FBB1536A2002D84700C49C10 /* Overlays */ = {
+			isa = PBXGroup;
+			children = (
+				FBB1536B2002DBCE00C49C10 /* ClassicOverlay.png */,
+				FBB153652002D81F00C49C10 /* ModernOverlay.png */,
+			);
+			name = Overlays;
 			sourceTree = "<group>";
 		};
 		FBD56CB01C65A9F100FF0DCA = {
@@ -89,7 +108,7 @@
 		FBD56CB11C65A9F100FF0DCA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0810;
+				LastUpgradeCheck = 0900;
 				ORGANIZATIONNAME = "Wolfgang Baird";
 				TargetAttributes = {
 					FBD56CB81C65A9F100FF0DCA = {
@@ -119,7 +138,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FB011F811C6FCEB700353211 /* ModernOverlay.png in Resources */,
+				FBB153672002D81F00C49C10 /* ModernOverlay.png in Resources */,
+				FBB1536C2002DBCE00C49C10 /* ClassicOverlay.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -162,14 +182,20 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -207,14 +233,20 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;

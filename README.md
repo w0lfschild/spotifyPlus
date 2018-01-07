@@ -21,7 +21,7 @@
 # Installation:
 
 1. Download [mySIMBL](https://github.com/w0lfschild/app_updates/raw/master/mySIMBL/mySIMBL_master.zip)
-2. Download [spotifyPlus](https://github.com/w0lfschild/spotifyPlus/raw/master/build/spotifyPlus.zip)
+2. Download [spotifyPlus](https://github.com/w0lfschild/spotifyPlus/raw/master/build/spotifyPlus.bundle.zip)
 3. Unzip downloads
 4. Open `spotifyPlus.bundle` with `mySIMBL.app`
 5. Restart Spotify

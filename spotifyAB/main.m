@@ -23,6 +23,7 @@ bool showBadge = true;
 int iconArt = 0;
 int sleepTime = 1000000;
 NSString *overlayPath;
+NSString *classicPath;
 
 @implementation main
 
@@ -177,7 +178,7 @@ NSString *overlayPath;
         [plugin updateMenu:spotifyPlus];
         [plugin restartMe];
     }
-
+    
 }
 
 - (IBAction)toggleBadges:(id)sender
@@ -221,8 +222,7 @@ NSString *overlayPath;
 {
     NSMenu *menu = [sender menu];
     NSArray *menuArray = [menu itemArray];
-    int objectIndex = (int)[menuArray indexOfObject:sender];
-    iconArt = 2 - objectIndex;
+    iconArt = (int)[menuArray indexOfObject:sender];
     NSLog(@"Icon art: %d", iconArt);
     NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
     [NSApp setApplicationIconImage:modifiedIcon];
@@ -251,15 +251,15 @@ NSString *overlayPath;
     NSSize    newSize = NSMakeSize( size.width + 40,
                                    size.height + 40 );
     
-//    NSSize rotatedSize = NSMakeSize(img.size.height, img.size.width) ;
+    //    NSSize rotatedSize = NSMakeSize(img.size.height, img.size.width) ;
     NSImage* rotatedImage = [[NSImage alloc] initWithSize:newSize] ;
     
     NSAffineTransform* transform = [NSAffineTransform transform] ;
     
     // In order to avoid clipping the image, translate
     // the coordinate system to its center
-//    [transform translateXBy:+img.size.width/2
-//                        yBy:+img.size.height/2] ;
+    //    [transform translateXBy:+img.size.width/2
+    //                        yBy:+img.size.height/2] ;
     
     [transform translateXBy:img.size.width / 2
                         yBy:img.size.height / 2];
@@ -272,38 +272,43 @@ NSString *overlayPath;
     [transform translateXBy:-size.width/2
                         yBy:-size.height/2] ;
     
-//
+    //
     
     [rotatedImage lockFocus] ;
     [transform concat] ;
     [img drawAtPoint:NSMakePoint(15,10)
-             fromRect:NSZeroRect
-            operation:NSCompositeCopy
-             fraction:1.0] ;
+            fromRect:NSZeroRect
+           operation:NSCompositeCopy
+            fraction:1.0] ;
     [rotatedImage unlockFocus] ;
     
     return rotatedImage;
 }
 
-- (NSImage*)roundCorners:(NSImage *)image
+- (NSImage*)roundCorners:(NSImage *)image :(float)shrink
 {
-    
     NSImage *existingImage = image;
-    NSSize existingSize = [existingImage size];
-    NSSize newSize = NSMakeSize(existingSize.width, existingSize.height);
+    NSSize newSize = [existingImage size];
     NSImage *composedImage = [[NSImage alloc] initWithSize:newSize];
+    
+    float imgW = newSize.width;
+    float imgH = newSize.height;
+    float xShift = (imgW - (imgW * shrink)) / 2;
+    float yShift = (imgH - (imgH * shrink)) / 2;
     
     [composedImage lockFocus];
     [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
-    
-    NSRect imageFrame = NSRectFromCGRect(CGRectMake((image.size.width * .05), (image.size.height * .05), (image.size.width * .9), (image.size.height * .9)));
-    NSBezierPath *clipPath = [NSBezierPath bezierPathWithRoundedRect:imageFrame xRadius:image.size.width yRadius:image.size.height];
+    NSRect imageFrame = NSRectFromCGRect(CGRectMake(xShift, yShift, (imgW * shrink), (imgH * shrink)));
+    NSBezierPath *clipPath = [NSBezierPath bezierPathWithRoundedRect:imageFrame xRadius:imgW yRadius:imgH];
     [clipPath setWindingRule:NSEvenOddWindingRule];
     [clipPath addClip];
-    
-    [image drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, newSize.width, newSize.height) operation:NSCompositeSourceOver fraction:1];
-    
+    [image drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, imgW, imgH) operation:NSCompositeSourceOver fraction:1];
     [composedImage unlockFocus];
+    
+    //    NSData *imageData = [composedImage TIFFRepresentation];
+    //    NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:imageData];
+    //    imageData = [imageRep representationUsingType:NSPNGFileType properties:[NSDictionary dictionary]];
+    //    [imageData writeToFile:@"/Users/w0lf/Desktop/spotifree.png" atomically:YES];
     
     return composedImage;
 }
@@ -313,32 +318,14 @@ NSString *overlayPath;
     // 0 = rounded
     // 1 = tilded
     // 2 = square
-//    NSString *myLittleCLIToolPath = NSProcessInfo.processInfo.arguments[0];
+    //    NSString *myLittleCLIToolPath = NSProcessInfo.processInfo.arguments[0];
     NSImage *resultIMG = [[NSImage alloc] init];
-    
     if (resultType == 0)
     {
-        if (![overlayPath length])
-        {
-            overlayPath = @"/tmp";
-            NSBundle* bundle = [NSBundle bundleWithIdentifier:@"org.w0lf.spotiHack"];
-            NSString* bundlePath = [bundle bundlePath];
-            if ([bundlePath length])
-                overlayPath = [bundlePath stringByAppendingString:@"/Contents/Resources/ModernOverlay.png"];
-        }
-        NSImage *rounded = [self roundCorners:stockCover];
-        NSImage *background = rounded;
-        NSImage *overlay = [[NSImage alloc] initByReferencingFile:overlayPath];
-        NSImage *newImage = [[NSImage alloc] initWithSize:[background size]];
-        [newImage lockFocus];
-        CGRect newImageRect = CGRectZero;
-        newImageRect.size = [newImage size];
-        [background drawInRect:newImageRect];
-        [overlay drawInRect:newImageRect];
-        [newImage unlockFocus];
-        resultIMG = newImage;
+        resultIMG = stockCover;
     }
-    else if (resultType == 1)
+    
+    if (resultType == 1)
     {
         NSSize dims = [[NSApp dockTile] size];
         dims.width *= 0.9;
@@ -352,10 +339,57 @@ NSString *overlayPath;
         smallImage = [plugin imageRotatedByDegrees:15.00 :smallImage];
         resultIMG = smallImage;
     }
-    else
+    
+    if (resultType == 2)
     {
+        if (![classicPath length])
+        {
+            classicPath = @"/tmp";
+            NSBundle* bundle = [NSBundle bundleWithIdentifier:@"org.w0lf.spotiHack"];
+            NSString* bundlePath = [bundle bundlePath];
+            if ([bundlePath length])
+                classicPath = [bundlePath stringByAppendingString:@"/Contents/Resources/ClassicOverlay.png"];
+        }
+        NSImage *rounded = [self roundCorners:stockCover :0.9];
+        NSImage *background = rounded;
+        NSImage *overlay = [[NSImage alloc] initByReferencingFile:classicPath];
+        NSImage *newImage = [[NSImage alloc] initWithSize:[background size]];
+        [newImage lockFocus];
+        CGRect newImageRect = CGRectZero;
+        newImageRect.size = [newImage size];
+        [background drawInRect:newImageRect];
+        [overlay drawInRect:newImageRect];
+        [newImage unlockFocus];
+        resultIMG = newImage;
+    }
+    
+    if (resultType == 3)
+    {
+        if (![overlayPath length])
+        {
+            overlayPath = @"/tmp";
+            NSBundle* bundle = [NSBundle bundleWithIdentifier:@"org.w0lf.spotiHack"];
+            NSString* bundlePath = [bundle bundlePath];
+            if ([bundlePath length])
+                overlayPath = [bundlePath stringByAppendingString:@"/Contents/Resources/ModernOverlay.png"];
+        }
+        NSImage *rounded = [self roundCorners:stockCover :0.85];
+        NSImage *background = rounded;
+        NSImage *overlay = [[NSImage alloc] initByReferencingFile:overlayPath];
+        NSImage *newImage = [[NSImage alloc] initWithSize:[background size]];
+        [newImage lockFocus];
+        CGRect newImageRect = CGRectZero;
+        newImageRect.size = [newImage size];
+        [background drawInRect:newImageRect];
+        [overlay drawInRect:newImageRect];
+        [newImage unlockFocus];
+        resultIMG = newImage;
+    }
+    
+    if (resultIMG == nil) {
         resultIMG = stockCover;
     }
+    
     return resultIMG;
 }
 
@@ -379,7 +413,7 @@ NSString *overlayPath;
         
         while (true) {
             playState = [thisApp playerState];
-//            NSLog(@"%@", playState);
+            //            NSLog(@"%@", playState);
             
             if ([playState isEqualToNumber:[NSNumber numberWithInt:2]]) {
                 
@@ -397,22 +431,22 @@ NSString *overlayPath;
                     [[NSApp dockTile] setBadgeLabel:@"Paused"];
                 
                 // Video AD (Not sure how to detect right now)
-//                if (muteVid)
-//                {
-//                    if (!isSysmuted)
-//                    {
-//                        isSysmuted = true;
-//                        system("osascript -e \"set volume with output muted\"");
-//                    }
-//                }
-//                else
-//                {
-//                    if (isSysmuted)
-//                    {
-//                        isSysmuted = false;
-//                        system("osascript -e \"set volume without output muted\"");
-//                    }
-//                }
+                //                if (muteVid)
+                //                {
+                //                    if (!isSysmuted)
+                //                    {
+                //                        isSysmuted = true;
+                //                        system("osascript -e \"set volume with output muted\"");
+                //                    }
+                //                }
+                //                else
+                //                {
+                //                    if (isSysmuted)
+                //                    {
+                //                        isSysmuted = false;
+                //                        system("osascript -e \"set volume without output muted\"");
+                //                    }
+                //                }
                 
             } else if ([playState isEqualToNumber:[NSNumber numberWithInt:1]]) {
                 
@@ -563,9 +597,10 @@ NSString *overlayPath;
     NSMenu *submenuArt = [[NSMenu alloc] init];
     [[submenuArt addItemWithTitle:@"Square" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
     [[submenuArt addItemWithTitle:@"Tilted" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
-    [[submenuArt addItemWithTitle:@"Circular" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuArt addItemWithTitle:@"Classic Circular" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
+    [[submenuArt addItemWithTitle:@"Modern Circular" action:@selector(setIconArt:) keyEquivalent:@""] setTarget:plugin];
     for (NSMenuItem* item in [submenuArt itemArray]) [item setState:NSOffState];
-    if ((2 - iconArt) >= 0) [[[submenuArt itemArray] objectAtIndex:(2 - iconArt)] setState:NSOnState];
+    if (iconArt < submenuArt.itemArray.count) [[[submenuArt itemArray] objectAtIndex:iconArt] setState:NSOnState];
     [artMenu setSubmenu:submenuArt];
     
     // Polling submenu
@@ -611,27 +646,27 @@ NSString *overlayPath;
 - (void)updateMenu:(NSMenu*)original {
     if (original)
     {
-    NSMenu* updatedMenu = original;
-    
-    [[updatedMenu itemWithTag:97] setState:showBadge];
-    [[updatedMenu itemWithTag:98] setState:showArt];
-    [[updatedMenu itemWithTag:99] setState:banners];
-
-    NSMenuItem* adsMenu = [updatedMenu itemWithTag:100];
-    NSArray* adsSub = [[adsMenu submenu] itemArray];
-    [[adsSub objectAtIndex:0] setState:muteAds];
-    [[adsSub objectAtIndex:1] setState:muteVid];
-    
-    NSMenuItem* artMenu = [updatedMenu itemWithTag:101];
-    NSArray* artSub = [[artMenu submenu] itemArray];
-    for (NSMenuItem* obj in artSub) [obj setState:NSOffState];
-    [[artSub objectAtIndex:(2 - iconArt)] setState:NSOnState];
-    
-    NSMenuItem* polMenu = [updatedMenu itemWithTag:102];
-    NSArray* polSub = [[polMenu submenu] itemArray];
-    for (NSMenuItem* obj in polSub) [obj setState:NSOffState];
-    long index = [pollTime indexOfObject:[[NSNumber numberWithInt:sleepTime] stringValue]];
-    [[polSub objectAtIndex:index] setState:NSOnState];
+        NSMenu* updatedMenu = original;
+        
+        [[updatedMenu itemWithTag:97] setState:showBadge];
+        [[updatedMenu itemWithTag:98] setState:showArt];
+        [[updatedMenu itemWithTag:99] setState:banners];
+        
+        NSMenuItem* adsMenu = [updatedMenu itemWithTag:100];
+        NSArray* adsSub = [[adsMenu submenu] itemArray];
+        [[adsSub objectAtIndex:0] setState:muteAds];
+        [[adsSub objectAtIndex:1] setState:muteVid];
+        
+        NSMenuItem* artMenu = [updatedMenu itemWithTag:101];
+        NSArray* artSub = [[artMenu submenu] itemArray];
+        for (NSMenuItem* obj in artSub) [obj setState:NSOffState];
+        [[artSub objectAtIndex:iconArt] setState:NSOnState];
+        
+        NSMenuItem* polMenu = [updatedMenu itemWithTag:102];
+        NSArray* polSub = [[polMenu submenu] itemArray];
+        for (NSMenuItem* obj in polSub) [obj setState:NSOffState];
+        long index = [pollTime indexOfObject:[[NSNumber numberWithInt:sleepTime] stringValue]];
+        [[polSub objectAtIndex:index] setState:NSOnState];
     }
 }
 
@@ -647,3 +682,4 @@ ZKSwizzleInterface(_spotifyPlusNSAD, SPTClientMenuHandler, NSObject <NSMenuDeleg
 }
 
 @end
+
