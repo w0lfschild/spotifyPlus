@@ -9,10 +9,11 @@
 - spotifyPlus is a SIMBL plugin that adds some features to the Spotify desktop player
     - Automatically mute audio ads
     - Block all ads (requires password to enable)
-    - Change the dock icon to the now playing track art (three options)
+    - Change the dock icon to the now playing track art (four options)
         - Square
         - Tilted square
-        - Circular
+        - Classic Circular
+        - Modern Circular
     - Add badge to app icon when muted or paused
     - Restart Spotify
     - Settings in Dock menu and Spotify+ item in the menubar
