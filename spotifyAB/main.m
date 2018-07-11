@@ -24,11 +24,11 @@ int iconArt = 0;
 int sleepTime = 1000000;
 NSString *overlayPath;
 NSString *classicPath;
+ClientMenuHandler *cmh;
 
 @implementation main
 
-+ (main*) sharedInstance
-{
++ (main*) sharedInstance {
     static main* plugin = nil;
     
     if (plugin == nil)
@@ -37,8 +37,7 @@ NSString *classicPath;
     return plugin;
 }
 
-+ (void)load
-{
++ (void)load {
     plugin = [main sharedInstance];
     
     if (!sharedPrefs)
@@ -125,17 +124,15 @@ NSString *classicPath;
     }
 }
 
-- (void)setMenu
-{
+- (void)setMenu {
     NSMenu* mainMenu = [NSApp mainMenu];
     spotifyPlus = [plugin spotPlusMenu];
-    NSMenuItem* newItem = [[NSMenuItem alloc] initWithTitle:@"Item" action:nil keyEquivalent:@""];
+    NSMenuItem* newItem = [[NSMenuItem alloc] initWithTitle:@"Spotify+" action:nil keyEquivalent:@""];
     [newItem setSubmenu:spotifyPlus];
     [mainMenu insertItem:newItem atIndex:5];
 }
 
-- (void)restartMe
-{
+- (void)restartMe {
     float seconds = 3.0;
     NSTask *task = [[NSTask alloc] init];
     NSMutableArray *args = [NSMutableArray array];
@@ -147,8 +144,7 @@ NSString *classicPath;
     [NSApp terminate:nil];
 }
 
-- (IBAction)editHostFile:(id)sender
-{
+- (IBAction)editHostFile:(id)sender {
     NSString * output = nil;
     NSString * processErrorDescription = nil;
     BOOL success = false;
@@ -181,8 +177,7 @@ NSString *classicPath;
     
 }
 
-- (IBAction)toggleBadges:(id)sender
-{
+- (IBAction)toggleBadges:(id)sender {
     showBadge = !showBadge;
     [sharedPrefs setBool:showBadge forKey:@"showBadge"];
     if (!showBadge)
@@ -190,26 +185,22 @@ NSString *classicPath;
     [plugin updateMenu:spotifyPlus];
 }
 
-- (IBAction)setAdsMuting:(id)sender
-{
+- (IBAction)setAdsMuting:(id)sender {
     muteAds = !muteAds;
     [sharedPrefs setBool:muteAds forKey:@"muteAds"];
     [plugin updateMenu:spotifyPlus];
 }
 
-- (IBAction)setVidMuting:(id)sender
-{
+- (IBAction)setVidMuting:(id)sender {
     muteVid = !muteVid;
     [sharedPrefs setBool:muteVid forKey:@"muteVid"];
     [plugin updateMenu:spotifyPlus];
 }
 
-- (IBAction)setShowArt:(id)sender
-{
+- (IBAction)setShowArt:(id)sender {
     showArt = !showArt;
     [sharedPrefs setBool:showArt forKey:@"showArt"];
-    if (showArt)
-    {
+    if (showArt) {
         NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
         [NSApp setApplicationIconImage:modifiedIcon];
     } else {
@@ -218,8 +209,7 @@ NSString *classicPath;
     [plugin updateMenu:spotifyPlus];
 }
 
-- (IBAction)setIconArt:(id)sender
-{
+- (IBAction)setIconArt:(id)sender {
     NSMenu *menu = [sender menu];
     NSArray *menuArray = [menu itemArray];
     iconArt = (int)[menuArray indexOfObject:sender];
@@ -230,8 +220,7 @@ NSString *classicPath;
     [plugin updateMenu:spotifyPlus];
 }
 
-- (IBAction)setPolling:(id)sender
-{
+- (IBAction)setPolling:(id)sender {
     NSMenu *menu = [sender menu];
     NSArray *menuArray = [menu itemArray];
     int objectIndex = (int)[menuArray indexOfObject:sender];
@@ -240,13 +229,11 @@ NSString *classicPath;
     [plugin updateMenu:spotifyPlus];
 }
 
-- (IBAction)checkUpdate:(id)sender
-{
+- (IBAction)checkUpdate:(id)sender {
     [[NSWorkspace sharedWorkspace] launchAppWithBundleIdentifier:@"org.w0lf.mySIMBL" options:NSWorkspaceLaunchDefault additionalEventParamDescriptor:nil launchIdentifier:nil];
 }
 
-- (NSImage*)imageRotatedByDegrees:(CGFloat)degrees :(NSImage*)img
-{
+- (NSImage*)imageRotatedByDegrees:(CGFloat)degrees :(NSImage*)img {
     NSSize    size = [img size];
     NSSize    newSize = NSMakeSize( size.width + 40,
                                    size.height + 40 );
@@ -285,8 +272,7 @@ NSString *classicPath;
     return rotatedImage;
 }
 
-- (NSImage*)roundCorners:(NSImage *)image :(float)shrink
-{
+- (NSImage*)roundCorners:(NSImage *)image :(float)shrink {
     NSImage *existingImage = image;
     NSSize newSize = [existingImage size];
     NSImage *composedImage = [[NSImage alloc] initWithSize:newSize];
@@ -313,8 +299,7 @@ NSString *classicPath;
     return composedImage;
 }
 
-- (NSImage*)createIconImage:(NSImage*)stockCover :(int)resultType
-{
+- (NSImage*)createIconImage:(NSImage*)stockCover :(int)resultType {
     // 0 = rounded
     // 1 = tilded
     // 2 = square
@@ -393,8 +378,7 @@ NSString *classicPath;
     return resultIMG;
 }
 
-- (void)pollThread
-{
+- (void)pollThread {
     //osascript -e "output muted of (get volume settings)"
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
@@ -568,7 +552,25 @@ NSString *classicPath;
     NSMenu* dockspotplusMenu = [plugin spotPlusMenu];
     [mainItem setSubmenu:dockspotplusMenu];
     
-    // Add spotify+ item
+    // Fix for moreMenu
+    if ([original.itemArray.firstObject.title isEqualToString:@""]) {
+        [original removeAllItems];
+        if (cmh != nil) {
+            [[original addItemWithTitle:@"-" action:@selector(togglePlayPause:) keyEquivalent:@""] setTarget:cmh];
+            [original addItem:[NSMenuItem separatorItem]];
+            [[original addItemWithTitle:@"Next" action:@selector(skipNext:) keyEquivalent:@""] setTarget:cmh];
+            [[original addItemWithTitle:@"Previous" action:@selector(skipPrevious:) keyEquivalent:@""] setTarget:cmh];
+            [[original addItemWithTitle:@"Seek Forward" action:@selector(seekForward:) keyEquivalent:@""] setTarget:cmh];
+            [[original addItemWithTitle:@"Seek BackWard" action:@selector(seekBackward:) keyEquivalent:@""] setTarget:cmh];
+            [original addItem:[NSMenuItem separatorItem]];
+            [[original addItemWithTitle:@"Shuffle" action:@selector(toggleShuffle:) keyEquivalent:@""] setTarget:cmh];
+            [[original addItemWithTitle:@"Repeat" action:@selector(toggleRepeat:) keyEquivalent:@""] setTarget:cmh];
+            [original addItem:[NSMenuItem separatorItem]];
+            [[original addItemWithTitle:@"Volume Up" action:@selector(volumeUp:) keyEquivalent:@""] setTarget:cmh];
+            [[original addItemWithTitle:@"Volume Down" action:@selector(volumeDown:) keyEquivalent:@""] setTarget:cmh];
+        }
+    }
+    
     [original addItem:[NSMenuItem separatorItem]];
     [original addItem:mainItem];
     
@@ -644,8 +646,7 @@ NSString *classicPath;
 }
 
 - (void)updateMenu:(NSMenu*)original {
-    if (original)
-    {
+    if (original) {
         NSMenu* updatedMenu = original;
         
         [[updatedMenu itemWithTag:97] setState:showBadge];
@@ -676,6 +677,7 @@ ZKSwizzleInterface(_spotifyPlusNSAD, SPTClientMenuHandler, NSObject <NSMenuDeleg
 @implementation _spotifyPlusNSAD
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)arg1 {
+    cmh = (ClientMenuHandler*)self;
     NSMenu* result = ZKOrig(NSMenu*, arg1);
     result = [plugin dockaddspotPlus:result];
     return result;
