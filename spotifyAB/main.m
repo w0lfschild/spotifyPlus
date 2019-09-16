@@ -26,6 +26,8 @@ NSString *overlayPath;
 NSString *classicPath;
 ClientMenuHandler *cmh;
 
+NSUInteger titlePos = 0;
+
 @implementation main
 
 + (main*) sharedInstance {
@@ -148,8 +150,7 @@ ClientMenuHandler *cmh;
     NSString * output = nil;
     NSString * processErrorDescription = nil;
     BOOL success = false;
-    if (!banners)
-    {
+    if (!banners) {
         NSArray *args = [[NSArray alloc] initWithObjects:@"\\\"\
                          0.0.0.0 pubads.g.doubleclick.net\n\
                          0.0.0.0 securepubads.g.doubleclick.net\n\
@@ -290,11 +291,6 @@ ClientMenuHandler *cmh;
     [clipPath addClip];
     [image drawAtPoint:NSZeroPoint fromRect:NSMakeRect(0, 0, imgW, imgH) operation:NSCompositeSourceOver fraction:1];
     [composedImage unlockFocus];
-    
-    //    NSData *imageData = [composedImage TIFFRepresentation];
-    //    NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:imageData];
-    //    imageData = [imageRep representationUsingType:NSPNGFileType properties:[NSDictionary dictionary]];
-    //    [imageData writeToFile:@"/Users/w0lf/Desktop/spotifree.png" atomically:YES];
     
     return composedImage;
 }
@@ -439,8 +435,7 @@ ClientMenuHandler *cmh;
                 track = [thisApp currentTrack];
                 trackURL = [track spotifyURL];
                 NSRange range = [trackURL rangeOfString:@"spotify:ad"];
-                if(range.location != NSNotFound)
-                {
+                if(range.location != NSNotFound) {
                     isAD = true;
                 } else {
                     isAD = false;
@@ -448,27 +443,33 @@ ClientMenuHandler *cmh;
                 
                 if (isAD)
                 {
+                    (SPNextTrackScriptCommand*)[NSScriptCommand performSelector:NSSelectorFromString(@"performDefaultImplementation")];
+                    
+                    NSNumber *num = [track duration];
+                    num = @([num floatValue] / 1000);
+//                    NSLog(@"%@ : %@", (NSNumber*)[NSApp playbackPosition], num);
+                    [NSApp setPlaybackPosition:num];
                     
                     // Playing Audio AD
                     
-                    if (muteAds)
-                    {
-                        if (!isMuted)
-                        {
-                            isMuted = true;
-                            appVolume = [thisApp soundVolume];
-                            [sharedPrefs setInteger:[appVolume integerValue] forKey:@"trackVol"];
-                            [thisApp setSoundVolume:[NSNumber numberWithInt:0]];
-                        }
-                    }
-                    else
-                    {
-                        if (isMuted)
-                        {
-                            isMuted = false;
-                            [thisApp setSoundVolume:appVolume];
-                        }
-                    }
+//                    if (muteAds)
+//                    {
+//                        if (!isMuted)
+//                        {
+//                            isMuted = true;
+//                            appVolume = [thisApp soundVolume];
+//                            [sharedPrefs setInteger:[appVolume integerValue] forKey:@"trackVol"];
+//                            [thisApp setSoundVolume:[NSNumber numberWithInt:0]];
+//                        }
+//                    }
+//                    else
+//                    {
+//                        if (isMuted)
+//                        {
+//                            isMuted = false;
+//                            [thisApp setSoundVolume:appVolume];
+//                        }
+//                    }
                     [NSApp setApplicationIconImage:nil];
                     
                 } else {
@@ -502,12 +503,13 @@ ClientMenuHandler *cmh;
                             fixedString = [fixedString stringByReplacingOccurrencesOfString:@"\"" withString:@""];
                             NSArray *urlComponents = [fixedString componentsSeparatedByString:@","];
                             NSString *iconURL = @"";
-                            if ([urlComponents count] >= 7)
-                                iconURL = [urlComponents objectAtIndex:7];
+                            if ([urlComponents count] >= 8)
+                                iconURL = [urlComponents objectAtIndex:8];
                             NSArray *iconComponents = [iconURL componentsSeparatedByString:@":"];
                             NSString *iconURLFixed = [NSString stringWithFormat:@"https:%@", [iconComponents lastObject]];
                             myImage = [[NSImage alloc] initWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:iconURLFixed]]];
-                            NSLog(@"%@", iconURLFixed);
+//                            myImage = [[NSImage alloc] initWithData:track.cover];
+//                            NSLog(@"log: %@", urlComponents);
                             
                             if ( myImage )
                             {
@@ -531,12 +533,37 @@ ClientMenuHandler *cmh;
                     isPaused = false;
                 }
                 
-                if ((NSNumber *)[thisApp soundVolume] < [NSNumber numberWithFloat:1.0])
-                {
+                if ([(NSNumber *)[thisApp soundVolume] doubleValue] < 1.000000) {
                     if (showBadge)
                         [[NSApp dockTile] setBadgeLabel:@"Muted"];
                 } else {
                     [[NSApp dockTile] setBadgeLabel:nil];
+//                    if (showBadge) {
+//                        NSString *fullText = [NSString stringWithFormat:@"%@ - %@ -", track.title, track.artist];
+//                        NSUInteger length = fullText.length - 1;
+//                        NSUInteger final = titlePos + 8;
+//                        NSString *partText = @"";
+//                        if (8 > length) {
+//                            partText = fullText;
+//                        } else {
+//                            if (final > length) {
+//                                NSUInteger overlap = final - length;
+//                                NSUInteger toEnd = length - titlePos;
+//                                NSString *part1 = [fullText substringWithRange:NSMakeRange(titlePos, toEnd)];
+//                                NSString *part2 = [fullText substringWithRange:NSMakeRange(0, overlap)];
+//                                partText = [NSString stringWithFormat:@"%@%@", part1, part2];
+//                            } else {
+//                                partText = [fullText substringWithRange:NSMakeRange(titlePos, 8)];
+//                            }
+//                            titlePos++;
+//                            if (titlePos == length)
+//                                titlePos = 0;
+//                        }
+//                        NSLog(@"spot+ : %lu : %lu : %@ : %@", (unsigned long)titlePos, (unsigned long)final, partText, fullText);
+//                        [[NSApp dockTile] setBadgeLabel:partText];
+//                    } else {
+//                        [[NSApp dockTile] setBadgeLabel:nil];
+//                    }
                 }
             }
             usleep(sleepTime);

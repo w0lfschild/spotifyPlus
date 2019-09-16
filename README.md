@@ -6,7 +6,7 @@
 
 - Designed for 10.9+ 
 - Designed for Spotify 1.0.28+  
-- spotifyPlus is a SIMBL plugin that adds some features to the Spotify desktop player
+- spotifyPlus is a MacForge plugin that adds some features to the Spotify desktop player
     - Automatically mute audio ads
     - Block all ads (requires password to enable)
     - Change the dock icon to the now playing track art (four options)
@@ -21,10 +21,10 @@
 
 # Installation:
 
-1. Download [mySIMBL](https://github.com/w0lfschild/app_updates/raw/master/mySIMBL/mySIMBL_master.zip)
+1. Download [MacForge](https://github.com/w0lfschild/app_updates/raw/master/MacForge/MacForge.zip)
 2. Download [spotifyPlus](https://github.com/w0lfschild/spotifyPlus/raw/master/build/spotifyPlus.bundle.zip)
 3. Unzip downloads
-4. Open `spotifyPlus.bundle` with `mySIMBL.app`
+4. Open `spotifyPlus.bundle` with `MacForge.app`
 5. Restart Spotify
 
 ### License:

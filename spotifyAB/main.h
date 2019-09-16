@@ -23,6 +23,12 @@
 - (void)menuNeedsUpdate:(NSMenu *)arg1;
 @end
 
+@interface SPNextTrackScriptCommand : NSScriptCommand
+{
+}
+- (id)performDefaultImplementation;
+@end
+
 @interface NSWindow (DisableUserInteraction)
 + (void)load;
 @property BOOL isUserInteractionEnabled;
