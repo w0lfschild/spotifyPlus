@@ -214,7 +214,7 @@ NSUInteger titlePos = 0;
     NSMenu *menu = [sender menu];
     NSArray *menuArray = [menu itemArray];
     iconArt = (int)[menuArray indexOfObject:sender];
-    NSLog(@"Icon art: %d", iconArt);
+//    NSLog(@"Icon art: %d", iconArt);
     NSImage *modifiedIcon = [plugin createIconImage:myImage :iconArt];
     [NSApp setApplicationIconImage:modifiedIcon];
     [sharedPrefs setInteger:iconArt forKey:@"iconArt"];
@@ -300,7 +300,8 @@ NSUInteger titlePos = 0;
     // 1 = tilded
     // 2 = square
     //    NSString *myLittleCLIToolPath = NSProcessInfo.processInfo.arguments[0];
-    NSImage *resultIMG = [[NSImage alloc] init];
+        
+    NSImage *resultIMG = nil;
     if (resultType == 0)
     {
         resultIMG = stockCover;

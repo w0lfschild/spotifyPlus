@@ -2,15 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>DevURL</key>
-	<string>https://github.com/w0lfschild/spotifyAB</string>
-	<key>SIMBLTargetApplications</key>
-	<array>
-		<dict>
-			<key>BundleIdentifier</key>
-			<string>com.spotify.client</string>
-		</dict>
-	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
@@ -24,14 +15,23 @@
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.6.5</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>18</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>DevURL</key>
+	<string>https://github.com/w0lfschild/spotifyAB</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2019 Wolfgang Baird. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
+	<key>SIMBLTargetApplications</key>
+	<array>
+		<dict>
+			<key>BundleIdentifier</key>
+			<string>com.spotify.client</string>
+		</dict>
+	</array>
 </dict>
 </plist>
