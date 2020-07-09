@@ -280,13 +280,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 22;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = /;
 				INFOPLIST_FILE = spotifyAB/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
-				MARKETING_VERSION = 0.6.11;
+				INSTALL_PATH = "/Library/Application Support/MacEnhance/Plugins";
+				MARKETING_VERSION = 0.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = org.w0lf.spotiHack;
 				PRODUCT_NAME = spotifyPlus;
-				SKIP_INSTALL = YES;
+				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Debug;
@@ -295,13 +297,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 22;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = /;
 				INFOPLIST_FILE = spotifyAB/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
-				MARKETING_VERSION = 0.6.11;
+				INSTALL_PATH = "/Library/Application Support/MacEnhance/Plugins";
+				MARKETING_VERSION = 0.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = org.w0lf.spotiHack;
 				PRODUCT_NAME = spotifyPlus;
-				SKIP_INSTALL = YES;
+				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = bundle;
 			};
 			name = Release;
